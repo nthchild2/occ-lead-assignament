@@ -33,6 +33,18 @@
     "zod": "^3.24.0",
     "zustand": "^4.5.0"
   },
+  "jest": {
+    "preset": "jest-expo",
+    "setupFilesAfterFramework": [
+      "@testing-library/jest-native/extend-expect"
+    ],
+    "moduleNameMapper": {
+      "^@occ/shared$": "<rootDir>/../packages/shared/src/index.ts"
+    },
+    "transformIgnorePatterns": [
+      "node_modules/(?!((jest-)?react-native|@react-native(-community)?)|expo(nent)?|@expo(nent)?/.*|@expo-google-fonts/.*|react-navigation|@react-navigation/.*|@unimodules/.*|unimodules|sentry-expo|native-base|react-native-svg|@shopify/flash-list|@gorhom/.*)"
+    ]
+  },
   "devDependencies": {
     "@babel/core": "^7.24.0",
     "@testing-library/jest-native": "^5.4.0",

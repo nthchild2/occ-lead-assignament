@@ -1,10 +1,10 @@
 # Shared contracts and auth always require lead review
-/packages/shared/             @lead
-/app/core/services/           @lead
-/backend/domains/auth/        @lead
-/docs/                        @lead
+/packages/shared/                  @lead
+/app/core/services/                @lead
+/backend/src/domains/auth/         @lead
+/docs/                             @lead
 
 # Feature screens and domain logic can be reviewed by any team member
-/app/app/                     @team
-/backend/domains/jobs/        @team
-/backend/domains/applications/ @team
+/app/app/                          @team
+/backend/src/domains/jobs/         @team
+/backend/src/domains/applications/ @team

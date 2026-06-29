@@ -17,6 +17,19 @@
     "pino": "^8.19.0",
     "zod": "^3.24.0"
   },
+  "jest": {
+    "preset": "ts-jest",
+    "testEnvironment": "node",
+    "roots": [
+      "<rootDir>/src"
+    ],
+    "testMatch": [
+      "**/__tests__/**/*.test.ts"
+    ],
+    "moduleNameMapper": {
+      "^@occ/shared$": "<rootDir>/../packages/shared/src/index.ts"
+    }
+  },
   "devDependencies": {
     "@types/cors": "^2.8.17",
     "@types/express": "^4.17.21",

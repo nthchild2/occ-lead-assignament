@@ -2,7 +2,7 @@
 
 ## Architecture
 
-- Monorepo with npm workspaces: `app`, `backend`, `packages/shared`
+- Monorepo with pnpm workspaces: `app`, `backend`, `packages/shared`
 - Frontend: `core/` (reusable internal library) + `app/` (Expo Router file-based hierarchy)
 - Backend: Modular Monolith with Clean Architecture layers per domain
 - Shared types: all API schemas live in `packages/shared` as Zod schemas — never duplicated
@@ -24,25 +24,25 @@
 
 ```bash
 # Install all workspaces
-npm install
+pnpm install
 
 # Start backend
-cd backend && npm start
+cd backend && pnpm dev
 
 # Start app
 cd app && npx expo start
 
 # Run all tests
-npm test
+pnpm test --recursive
 
 # Type check all workspaces
-npm run typecheck
+pnpm typecheck --recursive
 
 # Lint
-npm run lint
+pnpm lint
 
 # Format
-npm run format
+pnpm format
 ```
 
 ## Code ownership
@@ -61,8 +61,8 @@ Defined in `.github/CODEOWNERS`. Check it before modifying shared contracts, ser
 
 Architecture decisions are documented in `docs/`. Read them before making structural changes:
 
-- `docs/A1-architecture.md` — monorepo structure, backend architecture, API contract
-- `docs/A2-state-data.md` — Zustand stores, pagination, swipe prefetch
-- `docs/A3-navigation.md` — Expo Router structure, deep linking, BottomSheetModal
-- `docs/A4-quality.md` — testing strategy, branching, PR requirements, linting
-- `docs/A5-performance.md` — FlashList optimizations, monitoring, analytics
+- `docs/A1 · Monorepo Architecture.md` — monorepo structure, backend architecture, API contract
+- `docs/A2 · State & Data Strategy.md` — Zustand stores, pagination, swipe prefetch
+- `docs/A3 · Navigation & Deep Linking.md` — Expo Router structure, deep linking, BottomSheetModal
+- `docs/A4 · Quality Strategy.md` — testing strategy, branching, PR requirements, linting
+- `docs/A5 · Performance.md` — FlashList optimizations, monitoring, analytics
