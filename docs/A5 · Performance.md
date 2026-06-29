@@ -189,6 +189,62 @@ If `job_swipe` P90 climbs above ~16ms, it indicates JS thread contention during 
 
 ---
 
+## Decision 4 · Analytics infrastructure
+
+Analytics setup is our responsibility. What gets measured and where is owned by the analytics team — this document covers only the infrastructure decisions.
+
+### SDK
+
+Firebase Analytics is the natural choice — we already initialize the Firebase SDK for Performance Monitoring. Adding Analytics requires no additional dependency or initialization cost.
+
+Firebase Analytics integrates natively with Google Analytics 4 (GA4) via the Firebase ↔ GA4 link. The analytics team gets GA4 event data without us adding a separate GA SDK to the app.
+
+### Initialization
+
+Firebase Analytics initializes lazily by default — it does not block the JS thread on startup and does not impact cold start time. No special handling needed beyond the standard Firebase initialization in `app/_layout.tsx`.
+
+### What we instrument
+
+We provide the infrastructure and a typed event logging utility. The analytics team defines the event taxonomy — names, properties, funnels. Our utility enforces that events are logged consistently:
+
+```ts
+// core/lib/analytics.ts
+import analytics from '@react-native-firebase/analytics'
+
+export const logEvent = (name: string, params?: Record<string, string | number | boolean>) => {
+  if (!consentGranted()) return
+  analytics().logEvent(name, params)
+}
+```
+
+All event logging goes through this utility — never directly through the Firebase Analytics SDK from components or services. This gives us a single place to enforce consent checks, add debugging, or swap the underlying SDK.
+
+### User consent — GDPR
+
+Analytics must be gated behind user consent in markets where GDPR or equivalent privacy regulations apply. Firebase Analytics must not fire events before the user has explicitly opted in.
+
+Firebase Analytics supports this via `setAnalyticsCollectionEnabled`:
+
+```ts
+// Disable on startup by default
+await analytics().setAnalyticsCollectionEnabled(false)
+
+// Enable only after user grants consent
+const onConsentGranted = async () => {
+  await analytics().setAnalyticsCollectionEnabled(true)
+}
+```
+
+The consent flow and UI are out of scope for this exercise but the infrastructure must support it from day one. Retrofitting consent into an analytics setup that assumed opt-in by default is expensive.
+
+### What this document does not cover
+
+- Event naming conventions and taxonomy — owned by the analytics team
+- Funnel definitions and conversion tracking — owned by product
+- A/B testing instrumentation — a separate concern, likely Firebase Remote Config
+
+---
+
 ## Key metrics summary
 
 | Metric | Tool | Target |
