@@ -1,0 +1,29 @@
+{
+  "expo": {
+    "name": "OCC",
+    "slug": "occ-lead-ejercicio",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "scheme": "occ",
+    "userInterfaceStyle": "automatic",
+    "platforms": ["ios", "android"],
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.occ.lead"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#ffffff"
+      },
+      "package": "com.occ.lead"
+    },
+    "plugins": [
+      "expo-router",
+      "@react-native-firebase/app",
+      "@notifee/react-native"
+    ],
+    "experiments": {
+      "typedRoutes": true
+    }
+  }
+}
