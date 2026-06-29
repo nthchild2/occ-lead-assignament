@@ -247,3 +247,9 @@ When the sheet is open and the user has swiped to job at index N:
 If the user arrived via deep link (`activeJobIndex === -1`), `scrollToIndex` is skipped.
 
 If the user swiped into jobs loaded from a subsequent page, `activeJobIndex` reflects the position in the full accumulated `jobs.store.jobs` array — not the position within a single page. `FlashList` receives the full array so the index is valid.
+
+---
+
+## Implementation note · Quit state jobId handoff
+
+The quit state sequence stores the `jobId` in a ref before hydration completes. This ref lives in the root `_layout.tsx` but the actual navigation happens in `(protected)/_layout.tsx` — two separate layout files. The handoff between them needs to be deliberate: a React context or a module-level variable that the protected layout reads after hydration succeeds. A Zustand slice is also an option but adds persistence risk — this value should never survive an app restart on its own. This needs careful attention during implementation to avoid a race condition where the sheet opens before the session is confirmed.
