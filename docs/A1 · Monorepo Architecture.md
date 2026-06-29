@@ -36,12 +36,15 @@ occ-lead-ejercicio/
 │   │   │   ├── _layout.tsx
 │   │   │   └── login.tsx
 │   │   ├── (protected)/
-│   │   │   ├── _layout.tsx              ← auth guard
-│   │   │   ├── index.tsx                ← Job Search
-│   │   │   ├── activities.tsx           ← My Activities
-│   │   │   └── vacante/
-│   │   │       └── [id].tsx             ← deep link occ://vacante/:id
-│   │   └── _layout.tsx                  ← root layout, providers, session hydration
+│   │   │   ├── _layout.tsx              ← auth guard + session hydration + Notifee handler + BottomSheetModal
+│   │   │   └── (tabs)/
+│   │   │       ├── _layout.tsx          ← bottom tab bar: Search | Activities
+│   │   │       ├── index.tsx            ← Job Search (FlashList, filters)
+│   │   │       └── activities/
+│   │   │           ├── _layout.tsx      ← top tab switcher: Applied | Favorites
+│   │   │           ├── applied.tsx      ← Applied jobs (default)
+│   │   │           └── favorites.tsx    ← Favorites
+│   │   └── _layout.tsx                  ← root layout, providers, fonts
 │   ├── store/                           ← Zustand stores (auth, UI state)
 │   └── package.json
 ├── backend/                             ← Node.js + Express server
