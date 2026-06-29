@@ -14,15 +14,17 @@ This document covers the route structure, protected navigation, deep linking fro
 │   ├── _layout.tsx              ← redirects to (protected) if session exists
 │   └── login.tsx                ← Screen 3: Auth
 └── (protected)/
-    ├── _layout.tsx              ← auth guard + session hydration + Notifee handler
+    ├── _layout.tsx              ← auth guard + session hydration + Notifee handler + BottomSheetModal
     └── (tabs)/
         ├── _layout.tsx          ← bottom tab bar: Search | Activities
-        ├── index.tsx            ← Screen 1: Job Search + BottomSheetModal (Screen 2)
+        ├── index.tsx            ← Screen 1: Job Search (FlashList, filters)
         └── activities/
             ├── _layout.tsx      ← top tab switcher: Applied | Favorites
             ├── applied.tsx      ← Screen 4a: Applied jobs (default)
             └── favorites.tsx    ← Screen 4b: Favorites
 ```
+
+The `BottomSheetModal` lives in `(protected)/_layout.tsx`, above the tab navigator. This decouples the sheet from the Search tab — it can open over any tab without switching the active tab.
 
 ---
 
@@ -36,29 +38,32 @@ This document covers the route structure, protected navigation, deep linking fro
                 │
         ┌───────┴────────┐
         │                │
-┌───────▼──────┐  ┌──────▼──────────────────────────────┐
-│   (auth)/    │  │           (protected)/               │
-│  _layout.tsx │  │  _layout.tsx                         │
-│              │  │  - validates token on mount          │
-│  login.tsx   │  │  - redirects to login if no session  │
-│              │  │  - registers Notifee handler         │
-└──────────────┘  └──────────────┬───────────────────────┘
+┌───────▼──────┐  ┌──────▼──────────────────────────────────────┐
+│   (auth)/    │  │              (protected)/                    │
+│  _layout.tsx │  │  _layout.tsx                                 │
+│              │  │  - validates token on mount                  │
+│  login.tsx   │  │  - redirects to login if no session          │
+│              │  │  - registers Notifee handler                 │
+└──────────────┘  │  - owns BottomSheetModal ref                 │
+                  └──────────────┬───────────────────────────────┘
                                  │
                   ┌──────────────▼───────────────────┐
                   │         (tabs)/_layout.tsx        │
-                  │      bottom tab bar               │
+                  │         bottom tab bar            │
                   └──────┬───────────────┬────────────┘
                          │               │
               ┌──────────▼──────┐  ┌─────▼──────────────────┐
               │   index.tsx     │  │   activities/           │
               │   Job Search    │  │   _layout.tsx           │
-              │                 │  │   top tab switcher      │
-              │  ┌───────────┐  │  └──────┬──────────────────┘
-              │  │BottomSheet│  │         │               │
-              │  │  Modal    │  │  ┌──────▼─────┐  ┌─────▼──────┐
-              │  │ Job Detail│  │  │ applied.tsx│  │favorites   │
-              │  └───────────┘  │  │ (default)  │  │.tsx        │
-              └─────────────────┘  └────────────┘  └────────────┘
+              │   (FlashList)   │  │   top tab switcher      │
+              └─────────────────┘  └──────┬──────────────────┘
+                                          │               │
+                                   ┌──────▼─────┐  ┌─────▼──────┐
+                                   │ applied.tsx│  │favorites   │
+                                   │ (default)  │  │.tsx        │
+                                   └────────────┘  └────────────┘
+
+  BottomSheetModal renders above all tabs, owned by (protected)/_layout.tsx
 ```
 
 ---
@@ -95,34 +100,49 @@ The guard runs once on mount. Mid-session 401s are handled by the interceptor in
 
 ---
 
-## Decision 2 · BottomSheetModal coexistence with the router
+## Decision 2 · BottomSheetModal decoupled from the tab navigator
 
 ### Context
 
-The job detail is a `BottomSheetModal` that opens over the list. It is not a route. The spec requires that closing the sheet does not reset the list scroll position — which rules out any navigation event being involved in opening or closing it.
+The job detail is a `BottomSheetModal` that opens over whatever screen is currently active. It must not be tied to a specific tab — a notification tap should open the sheet without switching the active tab.
 
-Additionally, the user navigates between jobs by swiping inside the sheet. If each job were a route, every swipe would push or pop a route, polluting the back stack and creating conflicts between the back gesture and the swipe gesture.
+Additionally, the spec requires that closing the sheet does not reset the list scroll position — which rules out any navigation event being involved in opening or closing it. And since the user navigates between jobs by swiping inside the sheet, routing each job as a separate screen would pollute the back stack and conflict with the swipe gesture.
 
 ### Decision
 
-The `BottomSheetModal` is controlled imperatively via a ref in `index.tsx`. Opening and closing the sheet is not a navigation event — the route stack does not change.
+The `BottomSheetModal` is owned by `(protected)/_layout.tsx` and controlled imperatively via a ref. Opening and closing the sheet is not a navigation event — the route stack and the active tab do not change.
+
+Any part of the app that needs to open the sheet sets `activeJobId` in `jobs.store`. The protected layout listens to that value and opens the sheet:
 
 ```ts
-// app/(protected)/(tabs)/index.tsx
+// app/(protected)/_layout.tsx
 const sheetRef = useRef<BottomSheetModal>(null)
+const { activeJobId, clearActiveJob } = useJobsStore()
 
-const onJobPress = (job: Job, index: number) => {
-  setActiveJob(job.id, index)
-  sheetRef.current?.present()
-}
+useEffect(() => {
+  if (activeJobId) sheetRef.current?.present()
+}, [activeJobId])
 
 const onSheetDismiss = () => {
-  flashListRef.current?.scrollToIndex({ index: activeJobIndex, animated: false })
+  // Only scroll the list if the Search tab is currently active
+  if (activeTab === 'index' && activeJobIndex !== -1) {
+    flashListRef.current?.scrollToIndex({ index: activeJobIndex, animated: false })
+  }
   clearActiveJob()
+  if (jobId) router.setParams({ jobId: undefined })
 }
+
+return (
+  <>
+    <Slot />
+    <BottomSheetModal ref={sheetRef} onDismiss={onSheetDismiss}>
+      <JobDetail />
+    </BottomSheetModal>
+  </>
+)
 ```
 
-The list scroll position is never touched while the sheet is open. On dismiss, `scrollToIndex` brings the active job into view before `clearActiveJob()` resets the store.
+Job cards in `index.tsx` call `setActiveJob(job.id, index)`. Notification taps set `jobId` as a URL param, which the protected layout reads and translates into a `setActiveJob` call.
 
 ---
 
@@ -130,59 +150,44 @@ The list scroll position is never touched while the sheet is open. On dismiss, `
 
 ### Context
 
-The spec requires that tapping a push notification opens the Job Detail sheet for a specific job, identified by `id` in the notification payload. The deep link scheme is `occ://vacante/:id`.
-
-The entry point is always the Job Search screen — the sheet opens over it regardless of where the user is in the app. This keeps the UX identical whether the user tapped a job card or a notification.
+The spec requires that tapping a push notification opens the Job Detail sheet for a specific job using the scheme `occ://vacante/:id`. The sheet must open over whatever tab is currently active — not necessarily the Search tab.
 
 ### Decision
 
-The deep link resolves to `/(protected)/(tabs)/index` with the job id passed as a query param: `/(protected)/(tabs)/index?jobId=123`.
-
-`index.tsx` reads `jobId` from the URL params on mount and whenever params change. If present, it fetches the job and opens the sheet:
+The deep link resolves to `/(protected)/(tabs)/index?jobId=123`. The protected layout intercepts the `jobId` param, fetches the job, and opens the sheet without switching tabs:
 
 ```ts
-// app/(protected)/(tabs)/index.tsx
+// app/(protected)/_layout.tsx
 const { jobId } = useLocalSearchParams<{ jobId?: string }>()
 
 useEffect(() => {
   if (!jobId) return
   jobsService.getById(jobId).then((job) => {
-    setActiveJob(job.id, -1) // index unknown when coming from deep link
-    sheetRef.current?.present()
+    setActiveJob(job.id, -1) // index is unknown when arriving from a deep link
   })
 }, [jobId])
 ```
 
-When the sheet closes from a deep link entry, `clearActiveJob()` is called and the `jobId` param is cleared from the URL so a re-render doesn't reopen the sheet:
+`activeJobIndex` is `-1` when arriving from a deep link — the job is not in the `jobs.store` list. Swipe between jobs is disabled in this case. The sheet shows the single job detail only.
 
-```ts
-const onSheetDismiss = () => {
-  if (jobId) router.setParams({ jobId: undefined })
-  clearActiveJob()
-}
-```
-
-Note: when arriving from a deep link, the job is not in the `jobs.store` list — the user hasn't searched. In this case `activeJobIndex` is `-1` and swipe between jobs is disabled. The sheet shows the single job detail only.
+When the sheet closes, the `jobId` param is cleared from the URL so the sheet doesn't reopen on re-render.
 
 ### Notifee handler registration
 
-The Notifee event handler is registered in `(protected)/_layout.tsx` so it is only active when the user is authenticated:
+The Notifee event handler is registered in `(protected)/_layout.tsx` so it only fires when the user is authenticated:
 
 ```ts
 // app/(protected)/_layout.tsx
 useEffect(() => {
   return notifee.onForegroundEvent(({ type, detail }) => {
     if (type === EventType.PRESS && detail.notification?.data?.jobId) {
-      router.push({
-        pathname: '/(protected)/(tabs)/index',
-        params: { jobId: detail.notification.data.jobId },
-      })
+      router.setParams({ jobId: detail.notification.data.jobId })
     }
   })
 }, [])
 ```
 
-Background and quit state events are handled in the app entry point (`app/_layout.tsx`) via `notifee.onBackgroundEvent` and `notifee.getInitialNotification`.
+Background and quit state events are handled in `app/_layout.tsx` via `notifee.onBackgroundEvent` and `notifee.getInitialNotification`.
 
 ---
 
@@ -190,26 +195,26 @@ Background and quit state events are handled in the app entry point (`app/_layou
 
 ### Context
 
-When the app is closed and the user taps a notification, the app launches cold. The session must be validated before navigating to the protected sheet — otherwise the user could land on the detail screen without a valid token, and any action (apply, favorite) would fail with a 401.
+When the app is closed and the user taps a notification, the app launches cold. The session must be validated before the sheet opens — otherwise any action (apply, favorite) would fail with a 401.
 
 ### Decision
 
-The hydration sequence in `(protected)/_layout.tsx` already handles this — it runs `GET /auth/me` before rendering any child screen. The deep link params are held in the URL until hydration completes.
+The hydration sequence in `(protected)/_layout.tsx` runs `GET /auth/me` before rendering any children. The `jobId` is held until hydration completes.
 
-The sequence on quit state tap:
+Sequence on quit state tap:
 
 ```
 App launches cold
-  → root _layout.tsx renders
+  → app/_layout.tsx renders
   → notifee.getInitialNotification() reads the pending notification
   → stores jobId in a ref (not navigating yet)
   → (protected)/_layout.tsx mounts
   → GET /auth/me runs
-  → if valid: render children, then navigate to index?jobId=123
+  → if valid: render children, then set jobId param → sheet opens
   → if invalid: logout(), navigate to login (jobId is dropped)
 ```
 
-The jobId is not passed to the router until after hydration succeeds. This prevents a race condition where the sheet opens before the session is confirmed.
+The `jobId` is not passed to the router until after hydration succeeds. This prevents the sheet from opening before the session is confirmed.
 
 ---
 
@@ -225,14 +230,12 @@ A nested navigator inside `activities/` with a top tab switcher. Applied jobs is
 
 ```
 activities/
-├── _layout.tsx      ← top tab switcher (e.g. MaterialTopTabNavigator or custom)
+├── _layout.tsx      ← top tab switcher
 ├── applied.tsx      ← default
 └── favorites.tsx
 ```
 
-This keeps each list in its own file with its own data fetching, while the switcher at the top of the screen handles the transition between them. Each tab mounts its store (`applications.store`, `favorites.store`) independently.
-
-The bottom tab bar remains visible — this is a nested navigator inside the Activities tab, not a replacement for it.
+Each tab mounts its own store (`applications.store`, `favorites.store`) independently. The bottom tab bar remains visible — this is a nested navigator inside the Activities tab, not a replacement for it.
 
 ---
 
@@ -241,10 +244,10 @@ The bottom tab bar remains visible — this is a nested navigator inside the Act
 When the sheet is open and the user has swiped to job at index N:
 
 1. `jobs.store.activeJobIndex` is updated on every swipe via `setActiveJob`
-2. On sheet dismiss, `index.tsx` reads `activeJobIndex` and calls `flashListRef.current?.scrollToIndex({ index: activeJobIndex, animated: false })`
+2. On sheet dismiss, if the Search tab is active and `activeJobIndex !== -1`, `scrollToIndex` brings the active job into view
 3. `clearActiveJob()` resets the store
 
-If the user arrived via deep link (`activeJobIndex === -1`), `scrollToIndex` is skipped.
+If `activeJobIndex` is `-1` (deep link entry), `scrollToIndex` is skipped.
 
 If the user swiped into jobs loaded from a subsequent page, `activeJobIndex` reflects the position in the full accumulated `jobs.store.jobs` array — not the position within a single page. `FlashList` receives the full array so the index is valid.
 
@@ -252,4 +255,4 @@ If the user swiped into jobs loaded from a subsequent page, `activeJobIndex` ref
 
 ## Implementation note · Quit state jobId handoff
 
-The quit state sequence stores the `jobId` in a ref before hydration completes. This ref lives in the root `_layout.tsx` but the actual navigation happens in `(protected)/_layout.tsx` — two separate layout files. The handoff between them needs to be deliberate: a React context or a module-level variable that the protected layout reads after hydration succeeds. A Zustand slice is also an option but adds persistence risk — this value should never survive an app restart on its own. This needs careful attention during implementation to avoid a race condition where the sheet opens before the session is confirmed.
+The quit state sequence stores the `jobId` in a ref in `app/_layout.tsx` before hydration completes. The protected layout reads this value after hydration succeeds. The handoff between them needs to be deliberate — a React context or a module-level variable is the cleanest option. A Zustand slice is possible but adds persistence risk: this value should never survive an app restart on its own. This needs careful attention during implementation to avoid a race condition where the sheet opens before the session is confirmed.
