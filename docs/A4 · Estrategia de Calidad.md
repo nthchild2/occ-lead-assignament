@@ -396,3 +396,7 @@ Dependabot está habilitado vía `.github/dependabot.yml`. Escanea dependencias 
 **Seguridad a nivel de código — `eslint-plugin-security`**
 
 Agregado a la configuración de ESLint para el backend. Detecta problemas comunes de seguridad en Node.js: regex inseguras, riesgos de inyección, uso de `eval`, aleatoriedad insegura.
+
+No se aplica al frontend — la superficie de riesgo ahí es menor y las reglas agregan ruido sin un valor proporcional.
+
+`eslint-plugin-security@3.x` eliminó su export legado `plugin:security/recommended` y ahora solo distribuye flat config, lo cual es incompatible con nuestro `.eslintrc.js` basado en eslintrc (su objeto de configuración trae un campo `name` de nivel superior que el schema de eslintrc rechaza). En lugar de fijar la versión a v2 o migrar todo el repo a flat config, el set de reglas recomendado se reproduce de forma inline bajo el override de `backend/**/*.ts` en `.eslintrc.js`. Revisitar esto cuando el proyecto migre a ESLint flat config (`eslint.config.js`).

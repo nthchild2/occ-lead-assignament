@@ -1,9 +1,9 @@
 import 'dotenv/config'
-import express from 'express'
+import express, { type Express } from 'express'
 import cors from 'cors'
 import { logger } from './lib/logger'
 
-const app = express()
+const app: Express = express()
 const PORT = process.env.PORT ?? 3000
 
 app.use(cors())
@@ -23,7 +23,9 @@ app.get('/health', (_req, res) => {
 // Global error handler — must be last
 app.use((err: Error, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
   logger.error({ err }, 'Unhandled error')
-  res.status(500).json({ error: { code: 'INTERNAL_ERROR', message: 'An unexpected error occurred' } })
+  res
+    .status(500)
+    .json({ error: { code: 'INTERNAL_ERROR', message: 'An unexpected error occurred' } })
 })
 
 const server = app.listen(PORT, () => {

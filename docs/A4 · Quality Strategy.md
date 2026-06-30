@@ -12,17 +12,17 @@ The exercise requires at minimum one unit test per core module: the session stor
 
 ### What we test and where
 
-| Layer | What | Tools |
-|---|---|---|
-| `packages/shared` schemas | Zod schemas parse valid and invalid shapes correctly | Jest |
-| `core/services/api.ts` | Request construction, JWT injection, 401 interception | Jest, `msw` |
-| `core/services/*.service.ts` | Service functions call the right endpoints with the right params | Jest, `msw` |
-| `store/*.store.ts` | Store actions produce the correct state transitions | Jest |
-| `core/hooks/` | Hooks return the correct state given a store and service setup | Jest, React Native Testing Library |
-| `core/components/` | Renders correctly against theme tokens, snapshot regression, a11y props | Jest, React Native Testing Library, snapshots |
-| Screen components | User interactions trigger the right store actions and service calls, snapshot regression on completion | React Native Testing Library, snapshots |
-| Backend `*.service.ts` | Business logic, edge cases, error codes | Jest |
-| Backend `*.router.ts` | Endpoint contracts, auth middleware, response shape | Jest, `supertest` |
+| Layer                        | What                                                                                                   | Tools                                         |
+| ---------------------------- | ------------------------------------------------------------------------------------------------------ | --------------------------------------------- |
+| `packages/shared` schemas    | Zod schemas parse valid and invalid shapes correctly                                                   | Jest                                          |
+| `core/services/api.ts`       | Request construction, JWT injection, 401 interception                                                  | Jest, `msw`                                   |
+| `core/services/*.service.ts` | Service functions call the right endpoints with the right params                                       | Jest, `msw`                                   |
+| `store/*.store.ts`           | Store actions produce the correct state transitions                                                    | Jest                                          |
+| `core/hooks/`                | Hooks return the correct state given a store and service setup                                         | Jest, React Native Testing Library            |
+| `core/components/`           | Renders correctly against theme tokens, snapshot regression, a11y props                                | Jest, React Native Testing Library, snapshots |
+| Screen components            | User interactions trigger the right store actions and service calls, snapshot regression on completion | React Native Testing Library, snapshots       |
+| Backend `*.service.ts`       | Business logic, edge cases, error codes                                                                | Jest                                          |
+| Backend `*.router.ts`        | Endpoint contracts, auth middleware, response shape                                                    | Jest, `supertest`                             |
 
 ### Snapshot tests
 
@@ -32,7 +32,7 @@ Snapshot tests are used for regression detection — catching unintended UI chan
 
 **Feature screens:** A snapshot is added in the same PR that completes the feature, after the developer considers the screen done. The snapshot is reviewed as part of the PR diff. Future PRs that intentionally change the screen must include the updated snapshot — a blind `jest --updateSnapshot` without reviewing the diff is a checklist violation.
 
-The PR checklist includes: *"Snapshots reviewed, not blindly updated."*
+The PR checklist includes: _"Snapshots reviewed, not blindly updated."_
 
 Snapshots are not added to screens under active development — only to screens being submitted as complete.
 
@@ -44,11 +44,13 @@ Snapshots are not added to screens under active development — only to screens 
 ### Tools
 
 **Frontend:**
+
 - `jest` + `@testing-library/react-native` — component and hook tests
 - `msw` (Mock Service Worker) — intercepts fetch calls in tests without mocking modules
 - `@testing-library/jest-native` — additional matchers for React Native
 
 **Backend:**
+
 - `jest` — unit tests for services
 - `supertest` — integration tests for routers, spins up the Express app without a real server
 
@@ -104,13 +106,13 @@ We follow Gitflow. The rationale: as the team grows, we need to control what goe
 
 ### Branch types
 
-| Branch | Purpose |
-|---|---|
-| `main` | Production. Only receives merges from `release/*` and `hotfix/*`. Every merge is tagged. |
-| `develop` | Integration branch. All feature, chore, and hotfix work merges here first. |
-| `feature/*` | New features. Branches off `develop`, merges back into `develop`. |
-| `chore/*` | Maintenance, dependencies, config, refactors. Same flow as `feature/*`. |
-| `hotfix/*` | Production patches. Branches off `main`, merges into both `main` and `develop`. |
+| Branch      | Purpose                                                                                                                                |
+| ----------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| `main`      | Production. Only receives merges from `release/*` and `hotfix/*`. Every merge is tagged.                                               |
+| `develop`   | Integration branch. All feature, chore, and hotfix work merges here first.                                                             |
+| `feature/*` | New features. Branches off `develop`, merges back into `develop`.                                                                      |
+| `chore/*`   | Maintenance, dependencies, config, refactors. Same flow as `feature/*`.                                                                |
+| `hotfix/*`  | Production patches. Branches off `main`, merges into both `main` and `develop`.                                                        |
 | `release/*` | Stabilization. Branches off `develop` when ready to ship, merges into `main`. Only bug fixes allowed on this branch — no new features. |
 
 ### Full dev workflow
@@ -178,11 +180,11 @@ We use Expo Application Services (EAS) with three build profiles mapped to the b
 
 ### Build profiles
 
-| Profile | Trigger | Audience |
-|---|---|---|
-| `development` | Manual, local | Developers |
-| `preview` | Automatic on merge to `develop` and on `release/*` cut | QA team |
-| `production` | Manual `eas build` + `eas submit` after `release/*` merges to `main` | End users |
+| Profile       | Trigger                                                              | Audience   |
+| ------------- | -------------------------------------------------------------------- | ---------- |
+| `development` | Manual, local                                                        | Developers |
+| `preview`     | Automatic on merge to `develop` and on `release/*` cut               | QA team    |
+| `production`  | Manual `eas build` + `eas submit` after `release/*` merges to `main` | End users  |
 
 The `preview` build on `release/*` is what QA smoke tests — not the production build. The production build is only triggered after QA has signed off and the lead has approved the merge to `main`. It is built from the merged `main` code and submitted directly to App Store Connect and Google Play.
 
@@ -229,6 +231,7 @@ feature/* ──→ develop ──→ [EAS preview → TestFlight + Play Interna
 ### Release approval mechanism
 
 The `main` branch has GitHub branch protection rules:
+
 - Direct pushes blocked — only `release/*` and `hotfix/*` PRs can target `main`
 - Merge requires QA sign-off — QA reviewer is added to CODEOWNERS for `main` merges and must approve the PR
 - Merge requires lead approval — enforced via CODEOWNERS
@@ -238,6 +241,7 @@ Both approvals must be present before GitHub unblocks the merge. Only after merg
 ### Versioning
 
 We follow semantic versioning (`MAJOR.MINOR.PATCH`):
+
 - `MAJOR` — breaking changes or significant product pivots
 - `MINOR` — new features shipped in a sprint
 - `PATCH` — bug fixes and hotfixes
@@ -249,6 +253,7 @@ Every merge to `main` is tagged with the version: `v1.2.0`, `v1.2.1`, etc.
 Hotfixes branch off `main`, not `develop`.
 
 **Critical** (auth broken, crash on launch, data loss):
+
 - `hotfix/*` branch cut from `main`
 - Fix applied, smoke tested by lead on a preview build
 - Lead approves and merges to `main` — skips full QA cycle
@@ -256,6 +261,7 @@ Hotfixes branch off `main`, not `develop`.
 - `eas submit` triggered manually
 
 **Non-critical:**
+
 - Follows the normal sprint cycle
 - Picked up in the next `release/*`
 
@@ -307,6 +313,8 @@ Added to the ESLint config for the backend. Catches common Node.js security issu
 
 Not applied to the frontend — the risk surface there is lower and the rules add noise without proportional value.
 
+`eslint-plugin-security@3.x` dropped its legacy `plugin:security/recommended` export and now only ships flat config, which is incompatible with our eslintrc-based `.eslintrc.js` (its config object carries a top-level `name` field that the eslintrc schema rejects). Rather than pin to v2 or migrate the whole repo to flat config, the recommended rule set is reproduced inline under the `backend/**/*.ts` override in `.eslintrc.js`. Revisit this once the project migrates to ESLint flat config (`eslint.config.js`).
+
 ---
 
 ## Decision 4 · Pre-merge automation with Husky
@@ -314,6 +322,7 @@ Not applied to the frontend — the risk surface there is lower and the rules ad
 Husky runs checks locally before code reaches the remote. Two hooks:
 
 **Pre-commit** — fast checks that run on every commit:
+
 - ESLint (`eslint --fix`)
 - Prettier formatting (`prettier --write`)
 - TypeScript check (`tsc --noEmit`)
@@ -321,6 +330,7 @@ Husky runs checks locally before code reaches the remote. Two hooks:
 Using `lint-staged` so only staged files are linted — not the entire codebase on every commit.
 
 **Pre-push** — full test suite runs before pushing to remote:
+
 - `jest --passWithNoTests`
 
 This keeps CI from being the first place failures are caught. A developer knows their branch is clean before it ever hits the remote.
@@ -371,9 +381,11 @@ When a PR touches a path listed in CODEOWNERS, GitHub automatically requests the
 
 ```markdown
 ## What does this PR do?
+
 <!-- One sentence. If you can't describe it in one sentence, split the PR. -->
 
 ## Type
+
 - [ ] feat
 - [ ] fix
 - [ ] chore
@@ -381,6 +393,7 @@ When a PR touches a path listed in CODEOWNERS, GitHub automatically requests the
 - [ ] docs
 
 ## Checklist
+
 - [ ] This PR does one thing
 - [ ] Tests added or updated
 - [ ] Snapshots reviewed, not blindly updated (if UI changed)
@@ -389,6 +402,7 @@ When a PR touches a path listed in CODEOWNERS, GitHub automatically requests the
 - [ ] Relevant docs updated (if applicable)
 
 ## How to test
+
 <!-- Steps for the reviewer to verify the change -->
 
 ## Screenshots / recordings (if UI change)
@@ -399,6 +413,7 @@ When a PR touches a path listed in CODEOWNERS, GitHub automatically requests the
 ### Merge requirements
 
 A PR cannot be merged unless:
+
 - All checklist items are checked
 - Pre-push hooks pass (tests green, TypeScript clean)
 - At least one approval from a team member
@@ -429,28 +444,32 @@ The actual enforcement lives in configuration files at the repo root. This secti
 
 ### Files to be created
 
-| File | Purpose |
-|---|---|
-| `.eslintrc.js` | ESLint rules for both app and backend |
-| `.prettierrc` | Formatting rules |
+| File                 | Purpose                               |
+| -------------------- | ------------------------------------- |
+| `.eslintrc.js`       | ESLint rules for both app and backend |
+| `.prettierrc`        | Formatting rules                      |
 | `tsconfig.base.json` | Shared TypeScript config, strict mode |
 
 ### ESLint — what we enforce
 
 **Architecture boundaries:**
+
 - `import/no-restricted-paths` — `core/` cannot import from `app/`. Backend domain services cannot import from routers or middleware.
 - No cross-domain imports in the backend — `domains/jobs` cannot import from `domains/auth` directly.
 
 **TypeScript hygiene:**
+
 - `@typescript-eslint/no-explicit-any` — no `any`. Use `z.infer<>` for API response types.
 - `@typescript-eslint/no-non-null-assertion` — no `!` assertions. Handle nullability explicitly.
 - `@typescript-eslint/consistent-type-imports` — `import type` for type-only imports.
 
 **React Native:**
+
 - `react-hooks/rules-of-hooks` — hooks only at the top level of components and custom hooks.
 - `react-hooks/exhaustive-deps` — no missing dependencies in `useEffect`.
 
 **Code smells:**
+
 - `no-console` — no `console.log` in production code. Use the `logger` from `backend/src/lib/logger.ts`.
 - `no-unused-vars` — no dead code.
 - `complexity` — max cyclomatic complexity of 10 per function. If a function needs more, it should be split.
@@ -495,6 +514,7 @@ expect(applyButton).toBeEnabled()
 ```
 
 `@testing-library/jest-native` provides additional matchers:
+
 ```ts
 expect(applyButton).toHaveAccessibilityLabel('Apply to this job')
 ```
@@ -509,10 +529,10 @@ For deeper runtime auditing, `@axe-core/react-native` is available as a paid opt
 
 The three most common WCAG AA violations in mobile apps and how we address them:
 
-| Criterion | Requirement | Enforcement |
-|---|---|---|
-| 1.4.3 Contrast | Text contrast ratio ≥ 4.5:1 | Theme tokens define contrast-safe color pairs. All colors come from the theme — no hardcoded values. |
-| 2.5.5 Target size | Touch targets ≥ 44×44pt | ESLint via `react-native-a11y`. Minimum sizes enforced in theme spacing tokens. |
-| 4.1.2 Name, Role, Value | Every interactive element has a label and role | ESLint + RNTL queries as the standard testing pattern. |
+| Criterion               | Requirement                                    | Enforcement                                                                                          |
+| ----------------------- | ---------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| 1.4.3 Contrast          | Text contrast ratio ≥ 4.5:1                    | Theme tokens define contrast-safe color pairs. All colors come from the theme — no hardcoded values. |
+| 2.5.5 Target size       | Touch targets ≥ 44×44pt                        | ESLint via `react-native-a11y`. Minimum sizes enforced in theme spacing tokens.                      |
+| 4.1.2 Name, Role, Value | Every interactive element has a label and role | ESLint + RNTL queries as the standard testing pattern.                                               |
 
 Contrast safety is guaranteed by design: if colors only come from theme tokens, and the tokens are defined with contrast in mind, no component can accidentally use a non-compliant color pair.
