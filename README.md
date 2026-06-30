@@ -2,6 +2,8 @@
 
 Technical exercise for the Developer Lead Sr. — React Native position at OCC · Redarbor México.
 
+## How this project was build
+
 ## Setup
 
 ### Prerequisites

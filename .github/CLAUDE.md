@@ -66,3 +66,8 @@ Architecture decisions are documented in `docs/`. Read them before making struct
 - `docs/A3 · Navigation & Deep Linking.md` — Expo Router structure, deep linking, BottomSheetModal
 - `docs/A4 · Quality Strategy.md` — testing strategy, branching, PR requirements, linting
 - `docs/A5 · Performance.md` — FlashList optimizations, monitoring, analytics
+- `docs/A6 · AI-Assisted Development Lifecycle.md` — how AI tooling is used across this project, and the verification gate every AI-authored change must pass before being reported done
+
+## Verification gate
+
+Before reporting any change as complete: run `tsc --noEmit` for every touched workspace, then `eslint`, then `jest`. See A6 for why this is non-negotiable and what it has already caught.

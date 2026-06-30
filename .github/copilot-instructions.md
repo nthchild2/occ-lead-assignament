@@ -34,3 +34,7 @@ This is a React Native monorepo using Expo Router, Zustand, and TypeScript stric
 ```
 
 No `ok` field. HTTP status codes communicate transport-level success/failure.
+
+## AI lifecycle
+
+See `docs/A6 · AI-Assisted Development Lifecycle.md` for how AI tooling fits into this project and the verification gate (`tsc --noEmit` → `eslint` → `jest`) every AI-authored change must pass.
