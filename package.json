@@ -9,8 +9,8 @@
   ],
   "scripts": {
     "prepare": "husky",
-    "test": "npm run test --workspaces --if-present",
-    "typecheck": "npm run typecheck --workspaces --if-present",
+    "test": "pnpm --filter './app' --filter './backend' run test",
+    "typecheck": "pnpm --filter './app' --filter './backend' --filter './packages/shared' run typecheck",
     "lint": "eslint . --ext .ts,.tsx",
     "lint:fix": "eslint . --ext .ts,.tsx --fix",
     "format": "prettier --write \"**/*.{ts,tsx,js,json,md}\"",
