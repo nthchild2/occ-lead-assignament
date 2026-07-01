@@ -56,8 +56,9 @@ Each entry names a concrete example to copy and the constraints that apply. Cita
 
 ### …write a test
 
-- Co-locate as `*.test.ts(x)` next to the unit under test (e.g. `app/store/theme.store.test.ts`).
+- **App tests are co-located** (`*.test.ts(x)` next to the unit, e.g. `app/store/theme.store.test.ts`, `app/core/services/api.test.ts`). **Backend tests go under `backend/src/**/__tests__/*.test.ts`** — the backend jest config uses `testMatch: **/__tests__/**` and will _silently skip_ a co-located backend test.
 - App uses `jest-expo`; backend uses `ts-jest`. `@occ/shared` is mapped in each package's jest config. Don't add a custom `transformIgnorePatterns` to the app — `jest-expo`'s default already handles pnpm (A6, learned the hard way).
+- **For app-side unit tests, mock `global.fetch` or the service module — do NOT use msw.** msw v2's ESM-only deps fail to transform under `jest-expo` + pnpm's nested `node_modules`, and the only fix touches the shared jest config. Mocking `fetch`/services is lighter and idiomatic for unit tests anyway (see `app/core/services/api.test.ts`). msw stays available only if a genuine integration test needs network interception.
 
 ---
 
