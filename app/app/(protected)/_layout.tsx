@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react'
+import { BottomSheetModal } from '@gorhom/bottom-sheet'
+import { useEffect, useRef, useState } from 'react'
 import { Redirect, Slot } from 'expo-router'
 import { ActivityIndicator, View } from 'react-native'
 
@@ -6,6 +7,10 @@ import { useTheme } from '../../core/hooks/useTheme'
 import { useApplicationsStore } from '../../store/applications.store'
 import { useAuthStore } from '../../store/auth.store'
 import { useFavoritesStore } from '../../store/favorites.store'
+import { useJobsStore } from '../../store/jobs.store'
+import JobDetail from './JobDetail'
+
+const SNAP_POINTS = ['60%', '100%']
 
 type HydrationState = 'idle' | 'checking' | 'ready'
 
@@ -35,6 +40,8 @@ export default function ProtectedLayout() {
   const theme = useTheme()
   const token = useAuthStore((s) => s.token)
   const [hydration, setHydration] = useState<HydrationState>('idle')
+  const sheetRef = useRef<BottomSheetModal>(null)
+  const activeJobId = useJobsStore((s) => s.activeJobId)
 
   useEffect(() => {
     if (!token) {
@@ -48,6 +55,16 @@ export default function ProtectedLayout() {
       .hydrate()
       .finally(() => setHydration('ready'))
   }, [token])
+
+  // R2: the sheet opens whenever `activeJobId` becomes non-null (set by
+  // `job-search-screen`'s card tap, or any future entry point) — this effect
+  // is the single place that translates store state into an imperative
+  // `present()` call on the sheet ref.
+  useEffect(() => {
+    if (activeJobId) {
+      sheetRef.current?.present()
+    }
+  }, [activeJobId])
 
   if (!token) {
     return <Redirect href="/(auth)/login" />
@@ -68,5 +85,16 @@ export default function ProtectedLayout() {
     )
   }
 
-  return <Slot />
+  return (
+    <>
+      <Slot />
+      <BottomSheetModal
+        ref={sheetRef}
+        snapPoints={SNAP_POINTS}
+        onDismiss={() => useJobsStore.getState().clearActiveJob()}
+      >
+        <JobDetail />
+      </BottomSheetModal>
+    </>
+  )
 }

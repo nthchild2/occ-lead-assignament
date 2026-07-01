@@ -1,5 +1,5 @@
-import type { JobFilters, JobListResponse } from '@occ/shared'
-import { JobListResponseSchema } from '@occ/shared'
+import type { JobDetailResponse, JobFilters, JobListResponse } from '@occ/shared'
+import { JobDetailResponseSchema, JobListResponseSchema } from '@occ/shared'
 
 import { get } from './api'
 
@@ -22,4 +22,11 @@ function buildQueryString(filters: Partial<JobFilters>): string {
 
 export function list(filters: Partial<JobFilters>): Promise<JobListResponse> {
   return get(`/jobs${buildQueryString(filters)}`, JobListResponseSchema, false)
+}
+
+// Mirrors `list()`'s shape — public/unauthenticated, per
+// `backend/src/domains/jobs/jobs.router.ts`'s `GET /jobs/:id` (R9: fallback
+// fetch when a job isn't already present in `jobs.store.jobs`).
+export function getById(id: string): Promise<JobDetailResponse> {
+  return get(`/jobs/${id}`, JobDetailResponseSchema, false)
 }
