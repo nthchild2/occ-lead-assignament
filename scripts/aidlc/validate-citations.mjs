@@ -13,10 +13,14 @@
  * - Given a .md file, validates citations in that file.
  * - Given a directory, validates 01-research.md and 02-plan.md inside it.
  *
- * What counts as a citation: an inline-code token (`...`) that contains a `/`
- * and a file extension, optionally followed by `:line` or `:line-line`.
- * Tokens on a line containing "(new)" are skipped — they're proposed files that
- * don't exist yet. Placeholder tokens (with <, >, ..., or :NN) are skipped.
+ * What counts as a citation: an inline-code token (`...`) that contains a `/`,
+ * a file extension, AND a `:line` (or `:line-line`) suffix. The line number is
+ * the signal that the doc asserts "this specific code is here" — that is the
+ * fabrication-worthy claim worth enforcing, and it's how existing code is cited.
+ * A bare path with no line number (a directory, or a proposed new file the plan
+ * will create) is NOT validated — research and plan docs legitimately name files
+ * that don't exist yet, and a plan's change list is nothing but new-file paths.
+ * Also skipped: lines containing "(new)", and placeholder tokens (<, >, ..., :NN).
  *
  * Exit code 0 = all citations resolve. Non-zero = at least one bad citation.
  */
@@ -55,6 +59,12 @@ function validateFile(mdPath) {
       if (!pm) continue // not a path citation (e.g. useTheme(), @occ/shared)
 
       const [, relPath, startStr, endStr] = pm
+
+      // Only precise citations (path:line) are enforced. A bare path with no
+      // line number is a directory or a proposed new file (the plan's whole
+      // change list is new-file paths) — not an existence claim to validate.
+      if (!startStr) continue
+
       const absPath = isAbsolute(relPath) ? relPath : join(REPO_ROOT, relPath)
       const where = `line ${idx + 1}: \`${token}\``
 
@@ -62,13 +72,11 @@ function validateFile(mdPath) {
         problems.push(`${where} → file not found: ${relPath}`)
         continue
       }
-      if (startStr) {
-        const total = lineCount(absPath)
-        const start = Number(startStr)
-        const end = endStr ? Number(endStr) : start
-        if (start < 1 || end > total || start > end) {
-          problems.push(`${where} → line ${startStr}${endStr ? '-' + endStr : ''} out of range (file has ${total} lines)`)
-        }
+      const total = lineCount(absPath)
+      const start = Number(startStr)
+      const end = endStr ? Number(endStr) : start
+      if (start < 1 || end > total || start > end) {
+        problems.push(`${where} → line ${startStr}${endStr ? '-' + endStr : ''} out of range (file has ${total} lines)`)
       }
     }
   })
