@@ -6,6 +6,15 @@ import { env } from './config/env'
 import { errorMiddleware } from './middleware/error.middleware'
 import { authRouter } from './domains/auth/auth.router'
 import { jobsRouter } from './domains/jobs/jobs.router'
+import * as jobsService from './domains/jobs/jobs.service'
+import {
+  createApplicationsActionsRouter,
+  createApplicationsListRouter,
+} from './domains/applications/applications.router'
+import {
+  createFavoritesActionsRouter,
+  createFavoritesListRouter,
+} from './domains/favorites/favorites.router'
 
 const app: Express = express()
 const PORT = env.PORT
@@ -18,11 +27,17 @@ app.get('/health', (_req, res) => {
   res.json({ status: 'ok', uptime: process.uptime(), timestamp: new Date().toISOString() })
 })
 
-// Domains — routers will be mounted here as they are implemented
+// Domains — the composition root is the only place that wires the jobs lookup
+// into the applications/favorites domains (A1 Decision 3): neither domain
+// imports `domains/jobs` directly, both receive `getJob` via injection.
+const getJob = jobsService.getById
+
 app.use('/auth', authRouter)
 app.use('/jobs', jobsRouter)
-// app.use('/applications', applicationsRouter)
-// app.use('/favorites', favoritesRouter)
+app.use('/jobs', createApplicationsActionsRouter({ getJob }))
+app.use('/jobs', createFavoritesActionsRouter({ getJob }))
+app.use('/applications', createApplicationsListRouter({ getJob }))
+app.use('/favorites', createFavoritesListRouter({ getJob }))
 
 // Global error handler — must be last
 app.use(errorMiddleware)

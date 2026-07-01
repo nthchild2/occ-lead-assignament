@@ -43,7 +43,8 @@
       "@testing-library/jest-native/extend-expect"
     ],
     "moduleNameMapper": {
-      "^@occ/shared$": "<rootDir>/../packages/shared/src/index.ts"
+      "^@occ/shared$": "<rootDir>/../packages/shared/src/index.ts",
+      "^@react-native-async-storage/async-storage$": "@react-native-async-storage/async-storage/jest/async-storage-mock"
     }
   },
   "devDependencies": {
