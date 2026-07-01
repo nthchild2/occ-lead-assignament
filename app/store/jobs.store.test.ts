@@ -36,6 +36,7 @@ beforeEach(() => {
     error: null,
     activeJobId: null,
     activeJobIndex: null,
+    flashListRef: null,
   })
 })
 
@@ -104,5 +105,18 @@ describe('jobs.store', () => {
 
     expect(useJobsStore.getState().activeJobId).toBeNull()
     expect(useJobsStore.getState().activeJobIndex).toBeNull()
+  })
+
+  it('setFlashListRef stores the given ref object and leaves other fields untouched (R7)', () => {
+    useJobsStore.setState({ jobs: [makeJob('1')], activeJobId: 'job-9', activeJobIndex: 3 })
+
+    const ref = { current: null }
+    useJobsStore.getState().setFlashListRef(ref)
+
+    expect(useJobsStore.getState().flashListRef).toBe(ref)
+    // No side effects on unrelated fields.
+    expect(useJobsStore.getState().jobs).toEqual([makeJob('1')])
+    expect(useJobsStore.getState().activeJobId).toBe('job-9')
+    expect(useJobsStore.getState().activeJobIndex).toBe(3)
   })
 })

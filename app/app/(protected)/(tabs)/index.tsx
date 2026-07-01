@@ -1,5 +1,6 @@
 import type { Job, JobFilters } from '@occ/shared'
-import { FlashList } from '@shopify/flash-list'
+import { FlashList, type FlashListRef } from '@shopify/flash-list'
+import type React from 'react'
 import { useEffect, useRef, useState } from 'react'
 import { Text, View } from 'react-native'
 
@@ -125,6 +126,7 @@ function ListContent({
   onRetry,
   onEndReached,
   onJobPress,
+  flashListRef,
 }: {
   theme: Theme
   jobs: Job[]
@@ -133,6 +135,7 @@ function ListContent({
   onRetry: () => void
   onEndReached: () => void
   onJobPress: (job: Job, index: number) => void
+  flashListRef: React.RefObject<FlashListRef<Job>>
 }) {
   if (isLoading && jobs.length === 0) {
     return (
@@ -156,6 +159,7 @@ function ListContent({
 
   return (
     <FlashList
+      ref={flashListRef}
       data={jobs}
       renderItem={({ item, index }) => (
         <JobCard job={item} onPress={() => onJobPress(item, index)} />
@@ -194,6 +198,16 @@ export default function SearchScreen() {
   const isFirstSearchRender = useRef(true)
   const isFirstSalaryRender = useRef(true)
   const isMounted = useRef(false)
+  const flashListRef = useRef<FlashListRef<Job>>(null)
+
+  // R7: registers this screen's FlashList ref into `jobs.store` once on
+  // mount so `(protected)/_layout.tsx` (a different component tree) can
+  // imperatively call `scrollToIndex` on sheet dismiss. Runs once — the ref
+  // object itself is stable for the lifetime of this component.
+  useEffect(() => {
+    useJobsStore.getState().setFlashListRef(flashListRef)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   useEffect(() => {
     if (isFirstSearchRender.current) {
@@ -276,6 +290,7 @@ export default function SearchScreen() {
           onRetry={refetch}
           onEndReached={fetchNextPage}
           onJobPress={handleJobPress}
+          flashListRef={flashListRef}
         />
       </View>
     </View>

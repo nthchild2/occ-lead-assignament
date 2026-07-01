@@ -33,6 +33,7 @@ Each entry names a concrete example to copy and the constraints that apply. Cita
 - Consume design tokens via `useTheme()` — `app/core/hooks/useTheme.ts:5`. **No** inline color/size/spacing literals; pull from `theme.colors`, `theme.spacing`, `theme.type`, `theme.radii`, `theme.shadows`.
 - One component per file. Export from `app/core/components/index.ts`.
 - Keep cyclomatic complexity ≤ 10 (`.eslintrc.js`) — extract helpers/subcomponents rather than branching inline (see `Button.tsx` `variantColors` / `usePressAbsorb`).
+- **`core/` importing `app/store/*` is allowed** (only `core/` → `app/app/` is eslint-restricted — see Guardrails). `core/lib/activityStatus.ts` does this cleanly. A component that's genuinely reusable belongs in `core/components/` even if it reads a store; only route-lifecycle-coupled components (e.g. a sheet driven by a layout's ref) belong route-adjacent under `app/app/`.
 - Accessibility: interactive elements need `accessibilityRole` + label (A4 Decision 8).
 
 ### …add a design token

@@ -1,11 +1,15 @@
 import type { Job } from '@occ/shared'
 import { BottomSheetScrollView } from '@gorhom/bottom-sheet'
+import { Gesture, GestureDetector } from 'react-native-gesture-handler'
 import React, { useEffect, useState } from 'react'
-import { ActivityIndicator, Text, View } from 'react-native'
+import { ActivityIndicator, InteractionManager, Text, View } from 'react-native'
+import type { ViewStyle } from 'react-native'
+import Animated, { runOnJS, useAnimatedStyle, useSharedValue } from 'react-native-reanimated'
 
 import { Badge, Button, ErrorState, type ButtonVariant } from '../../core/components'
 import { useTheme } from '../../core/hooks/useTheme'
 import { isJobApplied, isJobFavorited } from '../../core/lib/activityStatus'
+import { useJobs } from '../../core/hooks/useJobs'
 import * as jobsService from '../../core/services/jobs.service'
 import { ApiError } from '../../core/services/api'
 import type { Theme } from '../../core/theme'
@@ -98,6 +102,142 @@ function useActiveJob(activeJobId: string | null): {
   }
 }
 
+// R1/R5: distance/velocity thresholds a pan gesture must cross on release to
+// count as an intentional swipe (rather than an incidental drag that should
+// snap back). Mirrors typical carousel/pager thresholds — no existing
+// precedent in this codebase to match, chosen conservatively.
+const SWIPE_DISTANCE_THRESHOLD = 80
+const SWIPE_VELOCITY_THRESHOLD = 800
+// R4: prefetch the next page once within this many jobs of the end of the
+// currently-loaded list.
+const PREFETCH_REMAINING_THRESHOLD = 3
+
+/**
+ * R3 (spec correction, see `02-plan.md`): swiping is a no-op unless the
+ * active job is genuinely positioned in `jobs` at `activeJobIndex` — covers
+ * both the initial/cleared state (`activeJobIndex === null`) and
+ * `useActiveJob`'s fallback-fetch case (job shown via `jobsService.getById`,
+ * not part of the loaded list, so `activeJobIndex` is stale/mismatched).
+ */
+function isSwipeDisabled(
+  jobs: Job[],
+  activeJobIndex: number | null,
+  activeJobId: string | null,
+): boolean {
+  if (activeJobIndex === null) return true
+  return jobs[activeJobIndex]?.id !== activeJobId
+}
+
+/**
+ * R1/R2: determines the target index a swipe should land on, clamped to
+ * `[0, jobs.length - 1]`. `direction` is `1` for a left swipe (advance to
+ * the next job) and `-1` for a right swipe (go back).
+ */
+function computeSwipeTargetIndex(
+  currentIndex: number,
+  direction: 1 | -1,
+  jobsLength: number,
+): number {
+  const raw = currentIndex + direction
+  return Math.max(0, Math.min(jobsLength - 1, raw))
+}
+
+/**
+ * R4/R5: within `PREFETCH_REMAINING_THRESHOLD` of the end of the loaded
+ * list and a next page exists, schedule `fetchNextPage()` via
+ * `InteractionManager.runAfterInteractions` so it never competes with the
+ * settling swipe animation. `fetchNextPage()` carries its own
+ * `hasNext`/`isLoading` guard (see `useJobs.ts`), so this only checks
+ * `hasNext` here to avoid a second, potentially-stale source of truth for
+ * the "already loading" half of the guard.
+ */
+function maybePrefetchNextPage(targetIndex: number, fetchNextPage: () => Promise<void>): void {
+  const { jobs, pagination } = useJobsStore.getState()
+  const remaining = jobs.length - targetIndex
+  if (remaining <= PREFETCH_REMAINING_THRESHOLD && pagination.hasNext) {
+    InteractionManager.runAfterInteractions(() => {
+      void fetchNextPage()
+    })
+  }
+}
+
+interface SwipeGestureResult {
+  panGesture: ReturnType<typeof Gesture.Pan>
+  animatedStyle: ViewStyle
+  endOfResults: boolean
+}
+
+/**
+ * Builds the horizontal swipe-between-jobs gesture (R1-R6). Extracted out of
+ * `JobDetailContent` to keep that component's own branching under the
+ * complexity ceiling, mirroring the `ActionButtons` extraction above.
+ *
+ * The pan gesture runs its callbacks on the UI thread (reanimated
+ * worklets); `onEnd`'s index/store/prefetch logic must run on the JS thread
+ * (Zustand `set()`, `InteractionManager`), so it's wrapped in `runOnJS`.
+ */
+function useJobSwipe(): SwipeGestureResult {
+  const { fetchNextPage } = useJobs()
+  const jobs = useJobsStore((s) => s.jobs)
+  const activeJobIndex = useJobsStore((s) => s.activeJobIndex)
+  const activeJobId = useJobsStore((s) => s.activeJobId)
+  const error = useJobsStore((s) => s.error)
+  const pagination = useJobsStore((s) => s.pagination)
+  const [endOfResults, setEndOfResults] = useState(false)
+
+  const translateX = useSharedValue(0)
+  const swipeDisabled = isSwipeDisabled(jobs, activeJobIndex, activeJobId)
+
+  // R6: reaching the last loaded job with no next page (or a prior prefetch
+  // attempt left `jobs.store.error` set) means further swipe-past-the-end
+  // attempts should show the indicator instead of doing anything jarring.
+  const atLastLoadedJob = activeJobIndex !== null && activeJobIndex === jobs.length - 1
+  const noMoreToLoad = !pagination.hasNext || error !== null
+
+  function handleSwipeEnd(direction: 1 | -1): void {
+    if (swipeDisabled || activeJobIndex === null) return
+
+    if (direction === 1 && atLastLoadedJob && noMoreToLoad) {
+      setEndOfResults(true)
+      return
+    }
+    setEndOfResults(false)
+
+    const targetIndex = computeSwipeTargetIndex(activeJobIndex, direction, jobs.length)
+    if (targetIndex === activeJobIndex) return
+
+    const targetJob = jobs[targetIndex]
+    if (!targetJob) return
+
+    useJobsStore.getState().setActiveJob(targetJob.id, targetIndex)
+    maybePrefetchNextPage(targetIndex, fetchNextPage)
+  }
+
+  const panGesture = Gesture.Pan()
+    .enabled(!swipeDisabled)
+    // Only claims horizontal movement so vertical drags pass through to
+    // `BottomSheetScrollView` untouched (plan risk: gesture conflicts
+    // between the horizontal pan and the sheet's own vertical scroll/drag).
+    .activeOffsetX([-10, 10])
+    .failOffsetY([-10, 10])
+    .onEnd((event) => {
+      'worklet'
+      const passesThreshold =
+        Math.abs(event.translationX) > SWIPE_DISTANCE_THRESHOLD ||
+        Math.abs(event.velocityX) > SWIPE_VELOCITY_THRESHOLD
+      translateX.value = 0
+      if (!passesThreshold) return
+      const direction: 1 | -1 = event.translationX < 0 ? 1 : -1
+      runOnJS(handleSwipeEnd)(direction)
+    })
+
+  const animatedStyle = useAnimatedStyle<ViewStyle>(() => ({
+    transform: [{ translateX: translateX.value }],
+  }))
+
+  return { panGesture, animatedStyle, endOfResults }
+}
+
 interface ActionButtonsProps {
   theme: Theme
   jobId: string
@@ -181,72 +321,92 @@ function JobDetailContent({ job, theme }: { job: Job; theme: Theme }) {
     }
   }
 
+  const { panGesture, animatedStyle, endOfResults } = useJobSwipe()
+
   return (
-    <BottomSheetScrollView contentContainerStyle={{ padding: theme.gutter, gap: theme.spacing[3] }}>
-      <Text
-        style={{
-          fontFamily: theme.type.headingSm.fontFamily,
-          fontSize: theme.type.headingSm.fontSize,
-          fontWeight: '600',
-          color: theme.colors.fg,
-        }}
-      >
-        {job.title}
-      </Text>
-      <Text
-        style={{
-          fontFamily: theme.type.bodyMd.fontFamily,
-          fontSize: theme.type.bodyMd.fontSize,
-          color: theme.colors.fgMuted,
-        }}
-      >
-        {job.company} · {job.city}
-      </Text>
-      {job.salary !== null ? (
-        <Text
-          style={{
-            fontFamily: theme.type.monoMd.fontFamily,
-            fontSize: theme.type.monoMd.fontSize,
-            color: theme.colors.fgSecondary,
-          }}
+    <GestureDetector gesture={panGesture}>
+      <Animated.View style={[{ flex: 1 }, animatedStyle]}>
+        <BottomSheetScrollView
+          contentContainerStyle={{ padding: theme.gutter, gap: theme.spacing[3] }}
         >
-          {formatSalary(job.salary)}
-        </Text>
-      ) : null}
-      <Text
-        style={{
-          fontFamily: theme.type.bodySm.fontFamily,
-          fontSize: theme.type.bodySm.fontSize,
-          color: theme.colors.fgMuted,
-        }}
-      >
-        Publicado el {formatPublishedAt(job.publishedAt)}
-      </Text>
-      {job.tags.length > 0 ? (
-        <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: theme.spacing[2] }}>
-          {job.tags.map((tag) => (
-            <Badge key={tag} label={tag} />
-          ))}
-        </View>
-      ) : null}
-      <Text
-        style={{
-          fontFamily: theme.type.bodyMd.fontFamily,
-          fontSize: theme.type.bodyMd.fontSize,
-          color: theme.colors.fg,
-        }}
-      >
-        {job.description}
-      </Text>
-      <ActionButtons
-        theme={theme}
-        jobId={job.id}
-        applyMessage={applyMessage}
-        favoriteMessage={favoriteMessage}
-        onApply={handleApply}
-        onToggleFavorite={handleToggleFavorite}
-      />
-    </BottomSheetScrollView>
+          <Text
+            style={{
+              fontFamily: theme.type.headingSm.fontFamily,
+              fontSize: theme.type.headingSm.fontSize,
+              fontWeight: '600',
+              color: theme.colors.fg,
+            }}
+          >
+            {job.title}
+          </Text>
+          <Text
+            style={{
+              fontFamily: theme.type.bodyMd.fontFamily,
+              fontSize: theme.type.bodyMd.fontSize,
+              color: theme.colors.fgMuted,
+            }}
+          >
+            {job.company} · {job.city}
+          </Text>
+          {job.salary !== null ? (
+            <Text
+              style={{
+                fontFamily: theme.type.monoMd.fontFamily,
+                fontSize: theme.type.monoMd.fontSize,
+                color: theme.colors.fgSecondary,
+              }}
+            >
+              {formatSalary(job.salary)}
+            </Text>
+          ) : null}
+          <Text
+            style={{
+              fontFamily: theme.type.bodySm.fontFamily,
+              fontSize: theme.type.bodySm.fontSize,
+              color: theme.colors.fgMuted,
+            }}
+          >
+            Publicado el {formatPublishedAt(job.publishedAt)}
+          </Text>
+          {job.tags.length > 0 ? (
+            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: theme.spacing[2] }}>
+              {job.tags.map((tag) => (
+                <Badge key={tag} label={tag} />
+              ))}
+            </View>
+          ) : null}
+          <Text
+            style={{
+              fontFamily: theme.type.bodyMd.fontFamily,
+              fontSize: theme.type.bodyMd.fontSize,
+              color: theme.colors.fg,
+            }}
+          >
+            {job.description}
+          </Text>
+          <ActionButtons
+            theme={theme}
+            jobId={job.id}
+            applyMessage={applyMessage}
+            favoriteMessage={favoriteMessage}
+            onApply={handleApply}
+            onToggleFavorite={handleToggleFavorite}
+          />
+          {endOfResults ? (
+            <Text
+              style={{
+                fontFamily: theme.type.bodySm.fontFamily,
+                fontSize: theme.type.bodySm.fontSize,
+                color: theme.colors.fgMuted,
+                textAlign: 'center',
+              }}
+            >
+              No hay más vacantes por mostrar.
+            </Text>
+          ) : null}
+        </BottomSheetScrollView>
+      </Animated.View>
+    </GestureDetector>
   )
 }
 

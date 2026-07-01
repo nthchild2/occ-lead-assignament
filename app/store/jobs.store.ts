@@ -1,4 +1,6 @@
 import type { Job, JobFilters, Pagination } from '@occ/shared'
+import type { FlashListRef } from '@shopify/flash-list'
+import type React from 'react'
 import { create } from 'zustand'
 
 interface JobsStore {
@@ -9,6 +11,13 @@ interface JobsStore {
   error: string | null
   activeJobId: string | null
   activeJobIndex: number | null
+  // Cross-tree handle to `job-search-screen`'s FlashList (R7) — set once by
+  // `index.tsx` on mount, read imperatively by `(protected)/_layout.tsx`'s
+  // `onDismiss`. Non-serializable (a React ref object): this store has no
+  // `persist` middleware today (A2 Decision 1 — only `auth.store` persists),
+  // and this field must NEVER be added to a future `persist`/`partialize`
+  // config if one is introduced.
+  flashListRef: React.RefObject<FlashListRef<Job>> | null
   setFilters: (partial: Partial<JobFilters>) => void
   appendJobs: (newJobs: Job[], pagination: Pagination) => void
   resetList: () => void
@@ -16,6 +25,7 @@ interface JobsStore {
   setError: (error: string | null) => void
   setActiveJob: (id: string, index: number) => void
   clearActiveJob: () => void
+  setFlashListRef: (ref: React.RefObject<FlashListRef<Job>>) => void
 }
 
 const initialPagination: Pagination = {
@@ -46,6 +56,7 @@ export const useJobsStore = create<JobsStore>((set, get) => ({
   error: null,
   activeJobId: null,
   activeJobIndex: null,
+  flashListRef: null,
   setFilters: (partial) => {
     set({ filters: { ...get().filters, ...partial } })
   },
@@ -66,5 +77,8 @@ export const useJobsStore = create<JobsStore>((set, get) => ({
   },
   clearActiveJob: () => {
     set({ activeJobId: null, activeJobIndex: null })
+  },
+  setFlashListRef: (ref) => {
+    set({ flashListRef: ref })
   },
 }))

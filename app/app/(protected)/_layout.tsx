@@ -28,6 +28,30 @@ export async function handleLogout(): Promise<void> {
   useFavoritesStore.getState().reset()
 }
 
+/**
+ * R7: before clearing the active job, best-effort scrolls the (separately-
+ * mounted) job-search FlashList to the job that was active when the sheet
+ * closed, so the underlying list is in sync when the sheet is dismissed.
+ * Reads `flashListRef`/`activeJobIndex` from `jobs.store` BEFORE calling
+ * `clearActiveJob()` — order matters, since `clearActiveJob()` resets
+ * `activeJobIndex` to `null`. `scrollToIndex` returns a `Promise<void>` that
+ * can reject if the index is out of the currently-rendered range; this is a
+ * fire-and-forget imperative call (mirrors `sheetRef.current?.present()` in
+ * this same file), guarded with `.catch()` so a rejection never surfaces as
+ * an unhandled rejection warning.
+ */
+function handleSheetDismiss(): void {
+  const { flashListRef, activeJobIndex } = useJobsStore.getState()
+  if (flashListRef?.current && activeJobIndex !== null) {
+    try {
+      flashListRef.current.scrollToIndex({ index: activeJobIndex, animated: false }).catch(() => {})
+    } catch {
+      // Best-effort: a stale ref/index must never crash the dismiss flow.
+    }
+  }
+  useJobsStore.getState().clearActiveJob()
+}
+
 // The guard for the entire protected subtree (R3). No token → redirect
 // immediately. Token present → call `hydrate()` once to validate it against
 // the server; render nothing but a themed loading state while that
@@ -88,11 +112,7 @@ export default function ProtectedLayout() {
   return (
     <>
       <Slot />
-      <BottomSheetModal
-        ref={sheetRef}
-        snapPoints={SNAP_POINTS}
-        onDismiss={() => useJobsStore.getState().clearActiveJob()}
-      >
+      <BottomSheetModal ref={sheetRef} snapPoints={SNAP_POINTS} onDismiss={handleSheetDismiss}>
         <JobDetail />
       </BottomSheetModal>
     </>

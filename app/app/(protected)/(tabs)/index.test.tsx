@@ -35,6 +35,12 @@ jest.mock('../../../core/hooks/useJobs', () => ({
 // imports/consts from inside `jest.mock(...)` (only `jest`/`mock`-prefixed
 // names are allowed) — so this factory pulls `react`/`react-native` via
 // `jest.requireActual` (the real, un-mocked modules) instead.
+// R7: also forwards `ref` via `forwardRef` + `useImperativeHandle` so the
+// registration test below can assert on the object `setFlashListRef`
+// receives, mirroring `_layout.test.tsx`'s `mockPresent`/`mockDismiss`
+// module-level-spy pattern for imperative handles.
+const mockScrollToIndex = jest.fn()
+
 jest.mock('@shopify/flash-list', () => {
   const mockReact = jest.requireActual('react') as typeof React
   const mockRN = jest.requireActual('react-native') as typeof ReactNative
@@ -56,20 +62,25 @@ jest.mock('@shopify/flash-list', () => {
   // a plain (non-rendered) prop, so the test can read it back via `.props`.
   const MockListContainer = mockRN.View as unknown as React.ComponentType<MockListContainerProps>
 
-  return {
-    FlashList: ({ data, renderItem, keyExtractor, onEndReached }: MockFlashListProps) =>
-      mockReact.createElement(
-        MockListContainer,
-        { testID: 'mock-flash-list', onEndReached },
-        data.map((item, index) =>
-          mockReact.createElement(
-            mockRN.View,
-            { key: keyExtractor ? keyExtractor(item, index) : index },
-            renderItem({ item, index }),
-          ),
+  const MockFlashList = mockReact.forwardRef<unknown, MockFlashListProps>(function MockFlashList(
+    { data, renderItem, keyExtractor, onEndReached },
+    ref,
+  ) {
+    mockReact.useImperativeHandle(ref, () => ({ scrollToIndex: mockScrollToIndex }))
+    return mockReact.createElement(
+      MockListContainer,
+      { testID: 'mock-flash-list', onEndReached },
+      data.map((item, index) =>
+        mockReact.createElement(
+          mockRN.View,
+          { key: keyExtractor ? keyExtractor(item, index) : index },
+          renderItem({ item, index }),
         ),
       ),
-  }
+    )
+  })
+
+  return { FlashList: MockFlashList }
 })
 
 const mockedUseJobsStore = useJobsStore as unknown as jest.Mock & { getState: jest.Mock }
@@ -99,14 +110,21 @@ interface StoreState {
 function setStoreState(state: StoreState, setFilters: jest.Mock, setActiveJob: jest.Mock): void {
   // The screen uses `useJobsStore((s) => s.field)` (hook-style selector
   // usage) for `jobs`/`isLoading`/`error`/`pagination`, and
-  // `useJobsStore.getState()` for imperative `setFilters`/`setActiveJob`
-  // calls — both call shapes are wired to the same underlying state here.
+  // `useJobsStore.getState()` for imperative `setFilters`/`setActiveJob`/
+  // `setFlashListRef` calls — both call shapes are wired to the same
+  // underlying state here.
   mockedUseJobsStore.mockImplementation((selector: (s: StoreState) => unknown) => selector(state))
-  mockedUseJobsStore.getState.mockReturnValue({ ...state, setFilters, setActiveJob })
+  mockedUseJobsStore.getState.mockReturnValue({
+    ...state,
+    setFilters,
+    setActiveJob,
+    setFlashListRef,
+  })
 }
 
 let setFilters: jest.Mock
 let setActiveJob: jest.Mock
+let setFlashListRef: jest.Mock
 let refetch: jest.Mock
 let fetchNextPage: jest.Mock
 
@@ -116,6 +134,8 @@ beforeEach(() => {
   jest.useRealTimers()
   setFilters = jest.fn()
   setActiveJob = jest.fn()
+  setFlashListRef = jest.fn()
+  mockScrollToIndex.mockClear()
   refetch = jest.fn().mockResolvedValue(undefined)
   fetchNextPage = jest.fn().mockResolvedValue(undefined)
   mockedUseJobs.mockReturnValue({ refetch, fetchNextPage, fetchPage: jest.fn() })
@@ -216,6 +236,25 @@ describe('SearchScreen', () => {
     fireEvent.press(screen.getByText('Job B'))
 
     expect(setActiveJob).toHaveBeenCalledWith('b', 1)
+  })
+
+  it("registers the FlashList's ref into jobs.store via setFlashListRef on mount (R7)", () => {
+    const jobs = [makeJob()]
+    setStoreState(
+      { jobs, isLoading: false, error: null, pagination: emptyPagination },
+      setFilters,
+      setActiveJob,
+    )
+    render(<SearchScreen />)
+
+    expect(setFlashListRef).toHaveBeenCalledTimes(1)
+    const registeredRef = setFlashListRef.mock.calls[0][0]
+    expect(registeredRef).toHaveProperty('current')
+    // The registered ref is the same object driving the mocked FlashList's
+    // imperative handle — calling its `scrollToIndex` proves it's a live
+    // ref to the rendered list, not an unrelated object shape.
+    registeredRef.current.scrollToIndex({ index: 0, animated: false })
+    expect(mockScrollToIndex).toHaveBeenCalledWith({ index: 0, animated: false })
   })
 
   it('wires FlashList onEndReached to fetchNextPage (R5)', () => {

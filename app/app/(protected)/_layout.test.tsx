@@ -1,4 +1,4 @@
-import type { Job } from '@occ/shared'
+import type { Job, Pagination } from '@occ/shared'
 import { act, render, waitFor } from '@testing-library/react-native'
 import type React from 'react'
 import type * as ReactNative from 'react-native'
@@ -37,11 +37,12 @@ jest.mock('@gorhom/bottom-sheet', () => {
 
   interface MockBottomSheetModalProps {
     onDismiss?: () => void
+    snapPoints?: string[]
     children?: React.ReactNode
   }
 
   const MockBottomSheetModal = mockReact.forwardRef<unknown, MockBottomSheetModalProps>(
-    function MockBottomSheetModal({ onDismiss, children }, ref) {
+    function MockBottomSheetModal({ onDismiss, snapPoints, children }, ref) {
       mockReact.useImperativeHandle(ref, () => ({
         present: mockPresent,
         dismiss: mockDismiss,
@@ -49,7 +50,7 @@ jest.mock('@gorhom/bottom-sheet', () => {
       return mockReact.createElement(
         mockReact.Fragment,
         null,
-        mockReact.createElement('MockBottomSheetModal', { onDismiss }),
+        mockReact.createElement('MockBottomSheetModal', { onDismiss, snapPoints }),
         children,
       )
     },
@@ -59,6 +60,34 @@ jest.mock('@gorhom/bottom-sheet', () => {
   // `BottomSheetScrollView` directly — a plain `ScrollView` stand-in is
   // enough here too, mirroring `JobDetail.test.tsx`'s own mock.
   return { BottomSheetModal: MockBottomSheetModal, BottomSheetScrollView: mockRN.ScrollView }
+})
+
+// `JobDetail.tsx` (rendered as this sheet's child) also directly imports
+// `react-native-gesture-handler` for its swipe gesture (R1), which crashes
+// at import time under `jest-expo` for the same native-module-boundary
+// reason as `@gorhom/bottom-sheet` above. Scoped to this test file only,
+// mirroring `JobDetail.test.tsx`'s own mock — this file's unit of concern is
+// the sheet's ref/effect/dismiss wiring, not the swipe gesture itself
+// (already covered by `JobDetail.test.tsx`), so the stub only needs to
+// render `GestureDetector`'s children without crashing.
+jest.mock('react-native-gesture-handler', () => {
+  const mockReact = jest.requireActual('react') as typeof React
+
+  function makePanGestureStub() {
+    const stub = {
+      enabled: () => stub,
+      activeOffsetX: () => stub,
+      failOffsetY: () => stub,
+      onEnd: () => stub,
+    }
+    return stub
+  }
+
+  return {
+    Gesture: { Pan: makePanGestureStub },
+    GestureDetector: ({ children }: { children?: React.ReactNode }) =>
+      mockReact.createElement(mockReact.Fragment, null, children),
+  }
 })
 
 // `expo-router`'s real `<Slot />` calls into `useRouteNode`, which uses
@@ -108,14 +137,26 @@ const mockedUseAuthStore = useAuthStore as unknown as jest.Mock & { getState: je
 const mockedUseJobsStore = useJobsStore as unknown as jest.Mock & { getState: jest.Mock }
 const mockedGetById = jobsService.getById as jest.Mock
 
+const emptyPagination: Pagination = { page: 1, limit: 20, total: 0, hasNext: false, hasPrev: false }
+
 interface JobsState {
   activeJobId: string | null
+  activeJobIndex: number | null
   // Deliberately non-empty so `JobDetail`'s "not found in jobs.store.jobs"
   // fallback (R9, `jobsService.getById`) never triggers here — this test
   // file's unit of concern is the sheet's ref/effect/dismiss wiring, not
   // `JobDetail`'s own fetch-fallback branching (already covered by
   // `JobDetail.test.tsx`).
   jobs: Job[]
+  // R7: cross-tree FlashList ref — `null` unless a test opts in via
+  // `setActiveJobId`'s `flashListRef` param.
+  flashListRef: { current: { scrollToIndex: jest.Mock } | null } | null
+  // `JobDetail.tsx`'s `useJobSwipe` (rendered as this sheet's child) reads
+  // these too — present so that hook doesn't crash on `undefined`. This
+  // file's unit of concern is the sheet's dismiss wiring, not the swipe
+  // gesture's own behavior (already covered by `JobDetail.test.tsx`).
+  pagination: Pagination
+  error: string | null
 }
 
 function makeJob(id: string): Job {
@@ -140,9 +181,20 @@ function setAuthReady(): void {
   })
 }
 
-function setActiveJobId(activeJobId: string | null, clearActiveJob: jest.Mock): void {
+function setActiveJobId(
+  activeJobId: string | null,
+  clearActiveJob: jest.Mock,
+  options: { activeJobIndex?: number | null; flashListRef?: JobsState['flashListRef'] } = {},
+): void {
   const jobs = activeJobId ? [makeJob(activeJobId)] : []
-  const state: JobsState = { activeJobId, jobs }
+  const state: JobsState = {
+    activeJobId,
+    activeJobIndex: options.activeJobIndex ?? null,
+    jobs,
+    flashListRef: options.flashListRef ?? null,
+    pagination: emptyPagination,
+    error: null,
+  }
   mockedUseJobsStore.mockImplementation((selector: (s: JobsState) => unknown) => selector(state))
   mockedUseJobsStore.getState.mockReturnValue({ ...state, clearActiveJob })
 }
@@ -173,12 +225,13 @@ describe('ProtectedLayout sheet wiring', () => {
     expect(mockPresent).not.toHaveBeenCalled()
   })
 
-  it("calls the sheet ref's present() when activeJobId becomes non-null (R1, R2)", async () => {
+  it("calls the sheet ref's present() when activeJobId becomes non-null, configured with the 60%/100% snap points (R1, R2)", async () => {
     const { rerender, UNSAFE_root } = render(<ProtectedLayout />)
     await waitFor(() => {
       expect(UNSAFE_root.findAllByType('MockBottomSheetModal').length).toBe(1)
     })
     expect(mockPresent).not.toHaveBeenCalled()
+    expect(UNSAFE_root.findByType('MockBottomSheetModal').props.snapPoints).toEqual(['60%', '100%'])
 
     setActiveJobId('job-1', clearActiveJob)
     await act(async () => {
@@ -202,6 +255,88 @@ describe('ProtectedLayout sheet wiring', () => {
     act(() => {
       sheetNode.props.onDismiss()
     })
+
+    expect(clearActiveJob).toHaveBeenCalledTimes(1)
+  })
+
+  it('onDismiss calls flashListRef.current.scrollToIndex with the current activeJobIndex before clearing it (R7)', async () => {
+    const scrollToIndex = jest.fn().mockResolvedValue(undefined)
+    setActiveJobId('job-1', clearActiveJob, {
+      activeJobIndex: 4,
+      flashListRef: { current: { scrollToIndex } },
+    })
+    const { UNSAFE_root } = render(<ProtectedLayout />)
+
+    await waitFor(() => {
+      expect(UNSAFE_root.findAllByType('MockBottomSheetModal').length).toBe(1)
+    })
+    const sheetNode = UNSAFE_root.findByType('MockBottomSheetModal')
+
+    act(() => {
+      sheetNode.props.onDismiss()
+    })
+
+    expect(scrollToIndex).toHaveBeenCalledWith({ index: 4, animated: false })
+    expect(clearActiveJob).toHaveBeenCalledTimes(1)
+  })
+
+  it('onDismiss skips scrollToIndex without throwing when flashListRef is null (R7)', async () => {
+    setActiveJobId('job-1', clearActiveJob, { activeJobIndex: 4, flashListRef: null })
+    const { UNSAFE_root } = render(<ProtectedLayout />)
+
+    await waitFor(() => {
+      expect(UNSAFE_root.findAllByType('MockBottomSheetModal').length).toBe(1)
+    })
+    const sheetNode = UNSAFE_root.findByType('MockBottomSheetModal')
+
+    expect(() => {
+      act(() => {
+        sheetNode.props.onDismiss()
+      })
+    }).not.toThrow()
+
+    expect(clearActiveJob).toHaveBeenCalledTimes(1)
+  })
+
+  it('onDismiss skips scrollToIndex without throwing when activeJobIndex is null (R7)', async () => {
+    const scrollToIndex = jest.fn().mockResolvedValue(undefined)
+    setActiveJobId('job-1', clearActiveJob, {
+      activeJobIndex: null,
+      flashListRef: { current: { scrollToIndex } },
+    })
+    const { UNSAFE_root } = render(<ProtectedLayout />)
+
+    await waitFor(() => {
+      expect(UNSAFE_root.findAllByType('MockBottomSheetModal').length).toBe(1)
+    })
+    const sheetNode = UNSAFE_root.findByType('MockBottomSheetModal')
+
+    act(() => {
+      sheetNode.props.onDismiss()
+    })
+
+    expect(scrollToIndex).not.toHaveBeenCalled()
+    expect(clearActiveJob).toHaveBeenCalledTimes(1)
+  })
+
+  it('does not crash and still clears the active job when scrollToIndex rejects (R7)', async () => {
+    const scrollToIndex = jest.fn().mockRejectedValue(new Error('index out of range'))
+    setActiveJobId('job-1', clearActiveJob, {
+      activeJobIndex: 4,
+      flashListRef: { current: { scrollToIndex } },
+    })
+    const { UNSAFE_root } = render(<ProtectedLayout />)
+
+    await waitFor(() => {
+      expect(UNSAFE_root.findAllByType('MockBottomSheetModal').length).toBe(1)
+    })
+    const sheetNode = UNSAFE_root.findByType('MockBottomSheetModal')
+
+    expect(() => {
+      act(() => {
+        sheetNode.props.onDismiss()
+      })
+    }).not.toThrow()
 
     expect(clearActiveJob).toHaveBeenCalledTimes(1)
   })
