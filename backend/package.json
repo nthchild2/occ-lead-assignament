@@ -26,6 +26,9 @@
     "testMatch": [
       "**/__tests__/**/*.test.ts"
     ],
+    "setupFiles": [
+      "<rootDir>/jest.setup.ts"
+    ],
     "moduleNameMapper": {
       "^@occ/shared$": "<rootDir>/../packages/shared/src/index.ts"
     }
