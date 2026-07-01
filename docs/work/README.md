@@ -6,6 +6,7 @@ This directory holds the **handoff documents** produced by the AI-Assisted Devel
 
 ```
 docs/work/
+├── ROADMAP.md               ← the backlog — all tickets, dependencies, build waves
 ├── _templates/              ← the contracts — copy these to start a run
 │   ├── 00-spec.md           ← requirements ledger (R-ids)
 │   ├── 01-research.md       ← file map + constraints, every claim cited
