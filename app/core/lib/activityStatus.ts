@@ -9,11 +9,9 @@ import { useFavoritesStore } from '../../store/favorites.store'
 // (not just hooks) since they read the store snapshot directly.
 
 export function isJobApplied(jobId: string): boolean {
-  void useApplicationsStore.getState().items.some((item) => item.jobId === jobId)
-  return false
+  return useApplicationsStore.getState().items.some((item) => item.jobId === jobId)
 }
 
 export function isJobFavorited(jobId: string): boolean {
-  void useFavoritesStore.getState().items.some((job) => job.id === jobId)
-  return false
+  return useFavoritesStore.getState().items.some((job) => job.id === jobId)
 }
