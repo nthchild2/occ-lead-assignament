@@ -46,6 +46,6 @@
 ## Handoff to VERIFY
 
 - **Workspaces touched (for `tsc`):** `app` (and `.env.example` at repo root — config only, no code).
-- **New/changed tests to run:** `app/core/services/api.test.ts` — **currently fails to run** under `pnpm --filter '@occ/app' run test` due to the msw/jest-expo/pnpm ESM-transform issue described above. `app/store/theme.store.test.ts` still passes.
-- **Commands run during implementation:** `pnpm --filter '@occ/app' run typecheck` → pass; `npx eslint app/core/services/api.ts app/core/services/api.test.ts` → pass (0 problems); `pnpm --filter '@occ/app' run test` → `theme.store` passes, `api.test.ts` suite fails to run (transform error, not an assertion failure).
-- **Pay special attention to:** the ESCALATION on R7. The production client (`app/core/services/api.ts`) is complete and gate-clean; the blocker is purely the test harness's ability to load msw. A verifier re-running the gate will see `api.test.ts` fail to execute until the shared jest transform/resolver config is adjusted — this is a known, documented state, not a silent breakage.
+- **New/changed tests to run:** `app/core/services/api.test.ts` (6 tests, green) and the still-passing `app/store/theme.store.test.ts`.
+- **Commands (post-resolution):** `pnpm --filter './app' run typecheck` → pass; `pnpm --filter './app' run test` → 8/8 pass; `eslint` on the api files → 0 problems.
+- **Pay special attention to:** R7 was delivered via a `global.fetch` mock, not msw (ESCALATION resolved — see Deviations). Confirm the app-side unit-test convention (mock fetch/service, not msw) reads sensibly for the downstream store/hook tickets.
