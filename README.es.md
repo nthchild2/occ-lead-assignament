@@ -43,6 +43,32 @@ AIDLC (AI-Assisted Development Lifecycle) es el framework bajo el cual se constr
 
 `.claude/agents/` contiene un subagente por fase (researcher, planner, implementer, verifier); `.claude/commands/` contiene el orquestador (`/aidlc-run`) y comandos por fase para toma de control manual. El pipeline corre bajo una "política de gate" configurable — full-control (un humano aprueba cada fase), balanced (checkpoint solo en PLAN), o full-auto — pero dos paradas duras aplican sin importar el modo: la ambigüedad siempre escala a un humano en vez de adivinarse, y una verificación fallida siempre regresa al ciclo en vez de marcarse como terminada.
 
+## Arquitectura — las decisiones, documento por documento
+
+Cinco documentos (`docs/A1`–`A5`) contienen el razonamiento real — contexto, decisión, alternativas consideradas, código — detrás de todo lo que sigue. Esta sección es el hilo conductor que los conecta; trátala como un mapa del _por qué_, no como un sustituto de leer los documentos cuando necesites el detalle.
+
+### [A1 · Arquitectura del Monorepo](<docs/A1 · Arquitectura del Monorepo.md>)
+
+Tres workspaces de pnpm — `app`, `backend`, `packages/shared` — con los schemas de Zod de `@occ/shared` como el único punto de acoplamiento intencional: un cambio de schema rompe el build de cualquier consumidor que no se adapte, así que el compilador es el contrato, no un changelog. Dentro del frontend, `core/` (agnóstico de navegación, reutilizable) y `app/` (la jerarquía de Expo Router) tienen una regla de dependencia unidireccional impuesta por ESLint (`import/no-restricted-paths`), no solo por convención. El backend es un **Monolito Modular**: cada dominio (`auth`, `jobs`, `applications`) es autocontenido, y dentro de cada dominio, capas de Clean Architecture separan el contrato HTTP (`*.router.ts`) de la lógica de negocio (`*.service.ts`, que nunca importa Express) de los tipos (`*.schema.ts`) — así que migrar de framework o extraer un dominio a su propio servicio más adelante es un cambio de capa de transporte, no una reescritura. El servidor también adopta las partes de costo cero de 12-Factor (config por variables de entorno, un endpoint `/health`, logging estructurado con `pino`, apagado grácil por `SIGTERM`) con una excepción documentada: la lista negra de JWT en memoria no es stateless-safe entre múltiples instancias — señalada como deuda técnica consciente, no oculta. Finalmente, en A1 vive la decisión del envelope de API sin `ok` (ver [más abajo](#envelope-de-respuesta-de-la-api-sin-campo-ok)).
+
+### [A2 · Estrategia de Estado y Datos](<docs/A2 · Estrategia de Estado y Datos.md>)
+
+Un store de Zustand por dominio (`auth`, `jobs`, `applications`, `favorites`); solo `auth.store` persiste, vía AsyncStorage — todo lo demás se reinicia en cada arranque. La validez de la sesión no se asume a partir de un token guardado: al iniciar la app, `GET /auth/me` la confirma antes de renderizar cualquier pantalla protegida, y un interceptor de 401 en `core/services/api.ts` maneja la expiración a mitad de sesión de la misma forma, sin que cada hook necesite su propia rama de manejo de fallo de auth. El estado de paginación y los filtros con debounce viven ambos en `jobs.store`; cualquier cambio de filtro u orden reinicia la lista y vuelve a pedir la página 1. La única pieza genuinamente delicada es el **prefetch del swipe**: llegar a 3 vacantes del final de la página cargada dispara silenciosamente el siguiente fetch en segundo plano — sin estado de carga, sin interrupción — y un fetch fallido degrada a un indicador discreto de fin-de-resultados en vez de una pantalla de error.
+
+### [A3 · Navegación y Deep Linking](<docs/A3 · Navegación y Deep Linking.md>)
+
+El árbol de rutas es una separación directa de Expo Router en `(auth)`/`(protected)`, cada una con su propio layout de guardia-por-redirección. La única decisión deliberadamente poco convencional: el `BottomSheetModal` del Detalle de Vacante **no** es una ruta. Es propiedad de `(protected)/_layout.tsx` y se abre de forma imperativa — cualquier parte de la app (un tap en una tarjeta, un tap en una notificación, un deep link) simplemente pone `activeJobId` en `jobs.store`, y el layout reacciona a ese valor. Esto evita que abrir/cerrar la hoja toque jamás el stack de rutas o el tab activo, lo cual importa para dos requisitos concretos: cerrar la hoja no debe reiniciar la posición de scroll de la lista, y un tap en una notificación debe abrir la hoja sobre _cualquier_ tab que esté activo en ese momento, sin forzar un cambio de tab. La otra sutileza real es la **carrera del estado quit**: si la app arranca en frío desde un estado cerrado vía un tap en una notificación, el id de la vacante objetivo se retiene en una ref a nivel de módulo hasta que la hidratación de sesión (`GET /auth/me`) realmente se resuelve — de lo contrario la hoja podría abrirse, y una acción de Postular/Favorito dentro de ella podría dispararse, antes de que la sesión esté confirmada como válida.
+
+### [A4 · Estrategia de Calidad](<docs/A4 · Estrategia de Calidad.md>)
+
+El testing está estratificado a propósito — schemas, servicios, stores, hooks, componentes y pantallas reciben cada uno una herramienta distinta para un modo de fallo distinto (Jest para lógica, `msw` para el límite de red, React Native Testing Library para queries de interacción/a11y, `supertest` para los routers del backend). Los snapshots deliberadamente no son automáticos: se agregan solo cuando una pantalla se considera _terminada_, se revisan como parte del diff de ese PR, y un `--updateSnapshot` a ciegas sin revisar qué cambió es una violación del checklist. El branching sigue Gitflow (`main`/`develop`/`feature`/`release`/`hotfix`) mapeado sobre tres perfiles de build de EAS (`development`/`preview`/`production`), con los merges a `main` bloqueados detrás de la aprobación tanto de QA como del lead vía CODEOWNERS — el build de producción y el envío a las tiendas siempre son manuales, nunca automáticos al hacer merge. Husky impone lo barato de forma local (lint, formato, typecheck en cada commit; la suite de tests completa en cada push) para que CI nunca sea el primer lugar donde aparece un error. La accesibilidad no es un ítem de checklist pegado al final — WCAG 2.1 AA se impone estructuralmente, ya que cada color de la app viene de tokens de theme elegidos por contraste, `eslint-plugin-react-native-a11y` detecta labels/roles faltantes al hacer commit, y las queries de RNTL basadas en role/label hacen que un componente inaccesible falle su propio test antes de fallar una auditoría.
+
+### [A5 · Rendimiento](<docs/A5 · Rendimiento.md>)
+
+Sentry se encarga del monitoreo de crashes/errores; Firebase Performance se encarga de las métricas de runtime que importan en producción pero son invisibles en desarrollo — tiempo de arranque en frío, tiempo-hasta-la-primera-tarjeta-de-vacante, P50/P90/P99 de la API. La lista de vacantes (la pantalla de mayor tráfico) recibe seis ajustes concretos de FlashList: un `estimatedItemSize` medido en vez de dejar que FlashList mida cada ítem, tarjetas memoizadas con clave en el `id` inmutable de la vacante, `getItemType` para que las tarjetas de altura variable (con/sin salario) no causen saltos de layout al reciclarse, y un `drawDistance` reducido para bajar el costo del render inicial. El prefetch del swipe de A2 obtiene aquí su garantía de rendimiento: `InteractionManager.runAfterInteractions` posterga el fetch hasta que la animación de swipe en el hilo de UI (impulsada por Reanimated, que nunca toca el hilo de JS) realmente se asienta, así que una llamada de red en segundo plano nunca puede competir por tiempo del hilo de JS con el manejo de gestos a 60fps. La infraestructura de analytics (Firebase Analytics) está provista pero explícitamente condicionada al consentimiento — la recolección está apagada por defecto y solo se habilita después del opt-in, ya que agregar consentimiento después a un SDK que ya está recolectando es costoso y esto está pensado para ser correcto desde el día uno, no parchado después.
+
+Las traducciones al inglés de A1–A6 están disponibles junto a los originales (p. ej. `docs/A1 · Monorepo Architecture.md`).
+
 ## Configuración
 
 ### Prerrequisitos
@@ -120,20 +146,7 @@ pnpm lint
 
 ---
 
-## Arquitectura
-
-Ver `docs/` para la documentación completa de arquitectura:
-
-- [A1 · Arquitectura del Monorepo](<docs/A1 · Arquitectura del Monorepo.md>)
-- [A2 · Estrategia de Estado y Datos](<docs/A2 · Estrategia de Estado y Datos.md>)
-- [A3 · Navegación y Deep Linking](<docs/A3 · Navegación y Deep Linking.md>)
-- [A4 · Estrategia de Calidad](<docs/A4 · Estrategia de Calidad.md>)
-- [A5 · Rendimiento](<docs/A5 · Rendimiento.md>)
-- [A6 · Ciclo de Vida de Desarrollo Asistido por IA](<docs/A6 · Ciclo de Vida de Desarrollo Asistido por IA.md>)
-
-Las versiones en inglés de cada uno están disponibles junto a los originales (p. ej. `docs/A1 · Monorepo Architecture.md`).
-
-## Decisiones clave
+## Decisiones clave, de un vistazo
 
 - **Monorepo**: pnpm workspaces con tres paquetes — `app`, `backend`, `packages/shared`
 - **Tipos compartidos**: schemas de Zod en `packages/shared`, consumidos tanto por app como por backend

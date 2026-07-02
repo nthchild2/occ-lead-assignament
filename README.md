@@ -43,6 +43,32 @@ AIDLC (AI-Assisted Development Lifecycle) is the framework this repo's features 
 
 `.claude/agents/` holds one subagent per phase (researcher, planner, implementer, verifier); `.claude/commands/` holds the orchestrator (`/aidlc-run`) and per-phase commands for manual takeover. The pipeline runs at a configurable "gate policy" — full-control (human approves every phase), balanced (checkpoint only at PLAN), or full-auto — but two hard stops apply regardless of mode: ambiguity always escalates to a human instead of being guessed, and a failed verification always loops back instead of being marked done.
 
+## Architecture — the decisions, one doc at a time
+
+Five documents (`docs/A1`–`A5`) hold the actual reasoning — context, decision, alternatives considered, code — behind everything below. This section is the throughline connecting them; treat it as a map of the _why_, not a replacement for reading the docs themselves when you need the detail.
+
+### [A1 · Monorepo Architecture](<docs/A1 · Monorepo Architecture.md>)
+
+Three pnpm workspaces — `app`, `backend`, `packages/shared` — with `@occ/shared`'s Zod schemas as the one intentional coupling point: a schema change breaks the build of any consumer that doesn't adapt, so the compiler is the contract, not a changelog. Inside the frontend, `core/` (navigation-agnostic, reusable) and `app/` (the Expo Router hierarchy) have a one-way dependency rule enforced by ESLint (`import/no-restricted-paths`), not just convention. The backend is a **Modular Monolith**: each domain (`auth`, `jobs`, `applications`) is self-contained, and inside each domain, Clean Architecture layers separate the HTTP contract (`*.router.ts`) from business logic (`*.service.ts`, which never imports Express) from types (`*.schema.ts`) — so migrating frameworks or extracting a domain into its own service later is a transport-layer change, not a rewrite. The server also picks up the zero-cost parts of 12-Factor (env config, a `/health` endpoint, structured `pino` logging, graceful `SIGTERM` shutdown) with one documented exception: the in-memory JWT blacklist isn't stateless-safe across multiple instances — flagged as conscious technical debt, not hidden. Finally, A1 is where the no-`ok` API envelope decision lives (see [below](#api-response-envelope-no-ok-field)).
+
+### [A2 · State & Data Strategy](<docs/A2 · State & Data Strategy.md>)
+
+One Zustand store per domain (`auth`, `jobs`, `applications`, `favorites`); only `auth.store` persists, via AsyncStorage — everything else resets on launch. Session validity isn't assumed from a stored token: on app start, `GET /auth/me` confirms it before any protected screen renders, and a 401 interceptor in `core/services/api.ts` handles mid-session expiry the same way, without every hook needing its own auth-failure branch. Pagination state and the debounced filters both live in `jobs.store`; any filter or sort change resets the list and refetches page 1. The one genuinely tricky piece is the **swipe prefetch**: reaching 3 jobs from the end of the loaded page silently triggers the next fetch in the background — no loading state, no interruption — and a failed fetch degrades to a quiet end-of-results indicator instead of an error screen.
+
+### [A3 · Navigation & Deep Linking](<docs/A3 · Navigation & Deep Linking.md>)
+
+The route tree is a straightforward Expo Router `(auth)`/`(protected)` split, each with its own guard-by-redirect layout. The one deliberately unconventional call: the Job Detail `BottomSheetModal` is **not** a route. It's owned by `(protected)/_layout.tsx` and opened imperatively — any part of the app (a card tap, a notification tap, a deep link) just sets `activeJobId` in `jobs.store`, and the layout reacts to that value. This keeps opening/closing the sheet from ever touching the route stack or the active tab, which matters for two concrete requirements: closing the sheet must not reset the list's scroll position, and a notification tap must open the sheet over _whatever_ tab is currently active, not force a tab switch. The other real subtlety is the **quit-state race**: if the app cold-starts from a killed state via a notification tap, the target job id is held in a module-level ref until session hydration (`GET /auth/me`) actually resolves — otherwise the sheet could open, and an Apply/Favorite action inside it could fire, before the session is confirmed valid.
+
+### [A4 · Quality Strategy](<docs/A4 · Quality Strategy.md>)
+
+Testing is layered on purpose — schemas, services, stores, hooks, components, and screens each get a different tool for a different failure mode (Jest for logic, `msw` for the network boundary, React Native Testing Library for interaction/a11y queries, `supertest` for backend routers). Snapshots are deliberately not automatic: they're added only when a screen is considered _done_, reviewed as part of that PR's diff, and a blind `--updateSnapshot` without reviewing what changed is a checklist violation. Branching follows Gitflow (`main`/`develop`/`feature`/`release`/`hotfix`) mapped onto three EAS build profiles (`development`/`preview`/`production`), with `main` merges gated behind both QA and lead sign-off via CODEOWNERS — the production build and store submission are always manual, never automatic on merge. Husky enforces the cheap stuff locally (lint, format, typecheck on commit; the full test suite on push) so CI is never the first place a mistake surfaces. Accessibility isn't a checklist item bolted on at the end — WCAG 2.1 AA is enforced structurally, since every color in the app comes from theme tokens chosen for contrast, `eslint-plugin-react-native-a11y` catches missing labels/roles at commit time, and RNTL's role/label-based queries make an inaccessible component fail its own test before it fails an audit.
+
+### [A5 · Performance](<docs/A5 · Performance.md>)
+
+Sentry owns crash/error monitoring; Firebase Performance owns runtime metrics that matter in production but are invisible in development — cold start time, time-to-first-job-card, API P50/P90/P99. The job list (the highest-traffic screen) gets six concrete FlashList tunings: a measured `estimatedItemSize` instead of letting FlashList measure every item, memoized cards keyed by immutable job `id`, `getItemType` so variable-height cards (with/without salary) don't cause layout jumps on recycle, and a reduced `drawDistance` to cut initial render cost. The swipe prefetch from A2 gets its performance guarantee here: `InteractionManager.runAfterInteractions` defers the fetch until the UI-thread swipe animation (driven by Reanimated, never touching the JS thread) has actually settled, so a background network call can never compete with 60fps gesture handling for JS-thread time. Analytics infrastructure (Firebase Analytics) is provided but explicitly gated behind consent — collection is off by default and only enabled after opt-in, since retrofitting consent into an already-collecting SDK is expensive and this is meant to be correct from day one, not patched later.
+
+Spanish translations of A1–A6 are available alongside the English originals (e.g. `docs/A1 · Arquitectura del Monorepo.md`).
+
 ## Setup
 
 ### Prerequisites
@@ -120,20 +146,7 @@ pnpm lint
 
 ---
 
-## Architecture
-
-See `docs/` for full architecture documentation:
-
-- [A1 · Monorepo Architecture](<docs/A1 · Monorepo Architecture.md>)
-- [A2 · State & Data Strategy](<docs/A2 · State & Data Strategy.md>)
-- [A3 · Navigation & Deep Linking](<docs/A3 · Navigation & Deep Linking.md>)
-- [A4 · Quality Strategy](<docs/A4 · Quality Strategy.md>)
-- [A5 · Performance](<docs/A5 · Performance.md>)
-- [A6 · AI-Assisted Development Lifecycle](<docs/A6 · AI-Assisted Development Lifecycle.md>)
-
-Spanish translations of each are available alongside the English originals (e.g. `docs/A1 · Arquitectura del Monorepo.md`).
-
-## Key decisions
+## Key decisions, at a glance
 
 - **Monorepo**: pnpm workspaces with three packages — `app`, `backend`, `packages/shared`
 - **Shared types**: Zod schemas in `packages/shared` consumed by both app and backend
