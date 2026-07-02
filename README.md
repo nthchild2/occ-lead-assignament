@@ -2,6 +2,8 @@
 
 Technical exercise for the Developer Lead Sr. — React Native position at OCC · Redarbor México.
 
+_[Léelo en español](README.es.md)_
+
 ## What this repo is, and how it was built
 
 The brief (`docs/ejercicio_tecnico_lead_rn_occ.pdf`) asks for a job-search app: login, search/filter/sort, job detail with swipe, apply/favorite, an activities screen, and local push notifications. Building those screens was never the hard part of this exercise. What a Lead is actually being evaluated on is the decisions _around_ the code: how the codebase is organized, what conventions a team of engineers would be expected to follow, and how those conventions survive contact with new features and new contributors — including AI contributors, since that's how a large part of this repo was actually written.
