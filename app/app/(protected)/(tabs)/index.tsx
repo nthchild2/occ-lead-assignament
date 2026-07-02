@@ -3,6 +3,7 @@ import { FlashList, type FlashListRef } from '@shopify/flash-list'
 import type React from 'react'
 import { useEffect, useRef, useState } from 'react'
 import { Text, View } from 'react-native'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
 
 import {
   EmptyState,
@@ -176,6 +177,7 @@ function ListContent({
 
 export default function SearchScreen() {
   const theme = useTheme()
+  const insets = useSafeAreaInsets()
   const { refetch, fetchNextPage } = useJobs()
   const jobs = useJobsStore((s) => s.jobs)
   const isLoading = useJobsStore((s) => s.isLoading)
@@ -263,7 +265,7 @@ export default function SearchScreen() {
           fontSize: theme.type.headingSm.fontSize,
           color: theme.colors.fg,
           paddingHorizontal: theme.gutter,
-          paddingTop: theme.spacing[6],
+          paddingTop: insets.top + theme.spacing[3],
         }}
       >
         Buscar empleos

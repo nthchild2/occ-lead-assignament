@@ -1,3 +1,4 @@
+import { Ionicons } from '@expo/vector-icons'
 import { Tabs } from 'expo-router'
 
 import { useTheme } from '../../../core/hooks/useTheme'
@@ -20,8 +21,28 @@ export default function TabsLayout() {
         },
       }}
     >
-      <Tabs.Screen name="index" options={{ title: 'Búsqueda' }} />
-      <Tabs.Screen name="activities" options={{ title: 'Actividades' }} />
+      <Tabs.Screen
+        name="index"
+        options={{
+          title: 'Búsqueda',
+          tabBarIcon: ({ color, size, focused }) => (
+            <Ionicons name={focused ? 'search' : 'search-outline'} color={color} size={size} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="activities"
+        options={{
+          title: 'Actividades',
+          tabBarIcon: ({ color, size, focused }) => (
+            <Ionicons
+              name={focused ? 'briefcase' : 'briefcase-outline'}
+              color={color}
+              size={size}
+            />
+          ),
+        }}
+      />
     </Tabs>
   )
 }

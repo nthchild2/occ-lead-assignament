@@ -18,6 +18,15 @@ jest.mock('../../../store/jobs.store', () => ({
 jest.mock('../../../core/hooks/useJobs', () => ({
   useJobs: jest.fn(),
 }))
+// `SearchScreen` reads `useSafeAreaInsets()` directly (no `<SafeAreaProvider>`
+// ancestor in this isolated render, unlike the real app tree rooted at
+// `app/_layout.tsx`) — file-scoped mock, not a global one: mocking this
+// module globally (via `moduleNameMapper`) broke `app/_layout.test.tsx`
+// (its real `<SafeAreaProvider>` needs the actual Context-based
+// implementation; see git history for the reverted attempt).
+jest.mock('react-native-safe-area-context', () => ({
+  useSafeAreaInsets: () => ({ top: 0, right: 0, bottom: 0, left: 0 }),
+}))
 
 // `@shopify/flash-list`'s published `dist/index.js` is ESM and isn't
 // transformed by `jest-expo`'s default `transformIgnorePatterns` (which only
