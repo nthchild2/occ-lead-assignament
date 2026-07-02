@@ -90,10 +90,12 @@ pnpm dev
 
 ```bash
 cd app
-pnpm exec expo start
+pnpm exec expo start -c
 ```
 
-The backend must be running first — the app resolves the API through `EXPO_PUBLIC_API_BASE_URL`, which points at `http://localhost:3000` above.
+The backend must be running first — the app resolves the API through `EXPO_PUBLIC_API_BASE_URL`, which points at `http://localhost:3000` above. `-c` clears Metro's cache; drop it for a faster subsequent start once things are stable.
+
+**Must run from `app/`, not the repo root.** `expo` is only a dependency of the `app` workspace. Running `pnpm exec expo start` from the repo root fails with `ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL — Command "expo" not found`, because pnpm treats a root-level `exec` as recursive across every workspace and fails on the first one without `expo` installed. If you don't want to `cd`, run `pnpm --filter ./app exec expo start -c` from the root instead.
 
 ### Run tests
 
