@@ -191,6 +191,13 @@ Removing `ok` leaves one source of truth per concern and avoids subtle client bu
 Full rationale and alternatives considered (RFC 9457 Problem Details, keeping `ok`)
 are documented in `docs/A1 · Monorepo Architecture.md` Decision 6.
 
+## Other deviations from the brief
+
+Two smaller deviations from the brief's literal wording, both deliberate and both worth calling out explicitly rather than leaving a reviewer to wonder whether they were missed:
+
+- **Env var name: `EXPO_PUBLIC_API_BASE_URL`, not `API_BASE_URL`.** The brief specifies `API_BASE_URL` in `app/.env`. Expo only inlines an env var into the client JS bundle if its name is prefixed `EXPO_PUBLIC_` — a plain `API_BASE_URL` would be `undefined` at runtime in the app, silently breaking every request. The prefix isn't a style choice, it's a hard requirement of how Expo/Metro resolves env vars into client code, so the name had to change for the feature (base URL from env, never hardcoded) to work at all.
+- **`app/core/services/api.ts`, not `app/src/services/api.ts`.** The brief specifies the latter path. This repo doesn't have an `app/src/` directory at all — see [A1's `core/` vs `app/` split](<docs/A1 · Monorepo Architecture.md>) (Decision 2): `core/` holds the navigation-agnostic reusable library (including all API services), `app/` holds only the Expo Router route tree. `api.ts` is a service, not a route, so it belongs in `core/services/`, consistent with every other service in the codebase (`jobs.service.ts`, `auth.service.ts`, etc.) — putting it in `app/src/services/` would have meant either breaking that rule for this one file or introducing a second, inconsistent services location.
+
 ## Credentials (mock)
 
 ```

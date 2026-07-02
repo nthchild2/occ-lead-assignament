@@ -193,6 +193,13 @@ del lado del cliente. El razonamiento completo y las alternativas consideradas
 (RFC 9457 Problem Details, mantener `ok`) están documentadas en
 `docs/A1 · Arquitectura del Monorepo.md`, Decisión 6.
 
+## Otras desviaciones del brief
+
+Dos desviaciones menores respecto a la redacción literal del brief, ambas deliberadas y ambas dignas de mencionarse explícitamente en vez de dejar que un revisor se pregunte si se pasaron por alto:
+
+- **Nombre de la variable de entorno: `EXPO_PUBLIC_API_BASE_URL`, no `API_BASE_URL`.** El brief especifica `API_BASE_URL` en `app/.env`. Expo solo incluye una variable de entorno en el bundle de JS del cliente si su nombre tiene el prefijo `EXPO_PUBLIC_` — un `API_BASE_URL` plano sería `undefined` en runtime dentro de la app, rompiendo silenciosamente cada request. El prefijo no es una elección de estilo, es un requisito duro de cómo Expo/Metro resuelve las variables de entorno hacia el código del cliente, así que el nombre tuvo que cambiar para que el requisito (URL base desde variable de entorno, nunca hardcodeada) funcionara siquiera.
+- **`app/core/services/api.ts`, no `app/src/services/api.ts`.** El brief especifica esta última ruta. Este repositorio no tiene un directorio `app/src/` en absoluto — ver la [separación `core/` vs `app/` de A1](<docs/A1 · Arquitectura del Monorepo.md>) (Decisión 2): `core/` contiene la librería reutilizable agnóstica de navegación (incluyendo todos los servicios de API), `app/` contiene solo el árbol de rutas de Expo Router. `api.ts` es un servicio, no una ruta, así que pertenece a `core/services/`, consistente con cada otro servicio del codebase (`jobs.service.ts`, `auth.service.ts`, etc.) — ponerlo en `app/src/services/` habría significado romper esa regla para este único archivo, o introducir una segunda ubicación de servicios inconsistente.
+
 ## Credenciales (mock)
 
 ```
