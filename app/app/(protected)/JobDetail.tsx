@@ -40,6 +40,24 @@ function messageFor(error: unknown): string {
   return GENERIC_ACTION_ERROR
 }
 
+const SUCCESS_CHIP_DURATION_MS = 2200
+
+// Auto-dismissing success message — separate from the (persistent, per the
+// spec's "mostrar mensaje sin cerrar el sheet") error message state below.
+// File-scoped since this is the only place that needs it, mirroring
+// `formatSalary`'s "no other component needs it yet" precedent.
+function useSuccessChip(): [string | null, (message: string) => void] {
+  const [message, setMessage] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (!message) return
+    const timer = setTimeout(() => setMessage(null), SUCCESS_CHIP_DURATION_MS)
+    return () => clearTimeout(timer)
+  }, [message])
+
+  return [message, setMessage]
+}
+
 /**
  * Resolves the active job: looks it up in `jobs.store.jobs` first (already
  * loaded from the list), falling back to `jobsService.getById` when it's not
@@ -242,7 +260,9 @@ interface ActionButtonsProps {
   theme: Theme
   jobId: string
   applyMessage: string | null
+  applySuccess: string | null
   favoriteMessage: string | null
+  favoriteSuccess: string | null
   onApply: () => void
   onToggleFavorite: () => void
 }
@@ -253,7 +273,9 @@ function ActionButtons({
   theme,
   jobId,
   applyMessage,
+  applySuccess,
   favoriteMessage,
+  favoriteSuccess,
   onApply,
   onToggleFavorite,
 }: ActionButtonsProps) {
@@ -272,6 +294,7 @@ function ActionButtons({
         onPress={onApply}
         fullWidth
       />
+      {applySuccess ? <Badge label={applySuccess} variant="leaf" /> : null}
       {applyMessage ? (
         <Text style={{ color: theme.colors.danger, fontSize: theme.type.bodySm.fontSize }}>
           {applyMessage}
@@ -283,6 +306,7 @@ function ActionButtons({
         onPress={onToggleFavorite}
         fullWidth
       />
+      {favoriteSuccess ? <Badge label={favoriteSuccess} variant="leaf" /> : null}
       {favoriteMessage ? (
         <Text style={{ color: theme.colors.danger, fontSize: theme.type.bodySm.fontSize }}>
           {favoriteMessage}
@@ -295,14 +319,20 @@ function ActionButtons({
 function JobDetailContent({ job, theme }: { job: Job; theme: Theme }) {
   const [applyMessage, setApplyMessage] = useState<string | null>(null)
   const [favoriteMessage, setFavoriteMessage] = useState<string | null>(null)
+  const [applySuccess, setApplySuccess] = useSuccessChip()
+  const [favoriteSuccess, setFavoriteSuccess] = useSuccessChip()
 
   // R7/R8: never lets a rejected `add`/`remove` throw further — the sheet
   // stays open either way, and a 409 (`ALREADY_APPLIED`) or any other error
-  // surfaces as an inline message instead.
+  // surfaces as an inline message instead. On success, a transient chip
+  // confirms the action fired — the button's own state change (label/variant/
+  // disabled) is the persistent indicator; the chip is just the "yes, that
+  // just happened" moment.
   async function handleApply(): Promise<void> {
     setApplyMessage(null)
     try {
       await useApplicationsStore.getState().add(job.id, job)
+      setApplySuccess('Aplicaste a esta vacante')
     } catch (err) {
       setApplyMessage(messageFor(err))
     }
@@ -313,8 +343,10 @@ function JobDetailContent({ job, theme }: { job: Job; theme: Theme }) {
     try {
       if (isJobFavorited(job.id)) {
         await useFavoritesStore.getState().remove(job.id)
+        setFavoriteSuccess('Quitaste de favoritos')
       } else {
         await useFavoritesStore.getState().add(job)
+        setFavoriteSuccess('Agregado a favoritos')
       }
     } catch (err) {
       setFavoriteMessage(messageFor(err))
@@ -388,7 +420,9 @@ function JobDetailContent({ job, theme }: { job: Job; theme: Theme }) {
             theme={theme}
             jobId={job.id}
             applyMessage={applyMessage}
+            applySuccess={applySuccess}
             favoriteMessage={favoriteMessage}
+            favoriteSuccess={favoriteSuccess}
             onApply={handleApply}
             onToggleFavorite={handleToggleFavorite}
           />

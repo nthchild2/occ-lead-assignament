@@ -288,6 +288,19 @@ describe('JobDetail', () => {
     })
   })
 
+  it('shows a success chip after a successful Apply', async () => {
+    const job = makeJob()
+    setActiveJobId('job-1', [job])
+    mockedIsJobApplied.mockReturnValue(false)
+
+    render(<JobDetail />)
+    fireEvent.press(screen.getByText('Aplicar'))
+
+    await waitFor(() => {
+      expect(screen.getByText('Aplicaste a esta vacante')).toBeTruthy()
+    })
+  })
+
   it('shows "Ya aplicaste" disabled when already applied, and does not call add again (R5)', () => {
     const job = makeJob()
     setActiveJobId('job-1', [job])
@@ -328,6 +341,32 @@ describe('JobDetail', () => {
       expect(favoritesRemove).toHaveBeenCalledWith('job-1')
     })
     expect(favoritesAdd).not.toHaveBeenCalled()
+  })
+
+  it('shows a success chip after adding a favorite', async () => {
+    const job = makeJob()
+    setActiveJobId('job-1', [job])
+    mockedIsJobFavorited.mockReturnValue(false)
+
+    render(<JobDetail />)
+    fireEvent.press(screen.getByText('Agregar a favoritos'))
+
+    await waitFor(() => {
+      expect(screen.getByText('Agregado a favoritos')).toBeTruthy()
+    })
+  })
+
+  it('shows a different success chip after removing a favorite', async () => {
+    const job = makeJob()
+    setActiveJobId('job-1', [job])
+    mockedIsJobFavorited.mockReturnValue(true)
+
+    render(<JobDetail />)
+    fireEvent.press(screen.getByText('Quitar de favoritos'))
+
+    await waitFor(() => {
+      expect(screen.getByText('Quitaste de favoritos')).toBeTruthy()
+    })
   })
 
   it('shows an inline message without crashing when add() rejects with ALREADY_APPLIED (R8)', async () => {
