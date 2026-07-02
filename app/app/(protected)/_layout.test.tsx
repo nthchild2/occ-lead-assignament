@@ -1,4 +1,5 @@
 import type { Job, Pagination } from '@occ/shared'
+import notifee, { EventType } from '@notifee/react-native'
 import { act, render, waitFor } from '@testing-library/react-native'
 import type React from 'react'
 import type * as ReactNative from 'react-native'
@@ -132,6 +133,13 @@ jest.mock('../../core/lib/activityStatus', () => ({
 jest.mock('../../core/services/jobs.service', () => ({
   getById: jest.fn(),
 }))
+// R5: mocked so tests can control what a "pending" quit-state notification
+// looks like without depending on `app/_layout.tsx`'s real module-level
+// state (which this file has no reason to touch — its unit of concern is
+// only "does this layout consume the pending id at the right time").
+jest.mock('../../core/lib/pendingNotification', () => ({
+  consumePendingJobId: jest.fn().mockReturnValue(null),
+}))
 
 const mockedUseAuthStore = useAuthStore as unknown as jest.Mock & { getState: jest.Mock }
 const mockedUseJobsStore = useJobsStore as unknown as jest.Mock & { getState: jest.Mock }
@@ -184,7 +192,11 @@ function setAuthReady(): void {
 function setActiveJobId(
   activeJobId: string | null,
   clearActiveJob: jest.Mock,
-  options: { activeJobIndex?: number | null; flashListRef?: JobsState['flashListRef'] } = {},
+  options: {
+    activeJobIndex?: number | null
+    flashListRef?: JobsState['flashListRef']
+    setActiveJob?: jest.Mock
+  } = {},
 ): void {
   const jobs = activeJobId ? [makeJob(activeJobId)] : []
   const state: JobsState = {
@@ -196,7 +208,11 @@ function setActiveJobId(
     error: null,
   }
   mockedUseJobsStore.mockImplementation((selector: (s: JobsState) => unknown) => selector(state))
-  mockedUseJobsStore.getState.mockReturnValue({ ...state, clearActiveJob })
+  mockedUseJobsStore.getState.mockReturnValue({
+    ...state,
+    clearActiveJob,
+    setActiveJob: options.setActiveJob ?? jest.fn(),
+  })
 }
 
 let clearActiveJob: jest.Mock
@@ -319,6 +335,27 @@ describe('ProtectedLayout sheet wiring', () => {
     expect(clearActiveJob).toHaveBeenCalledTimes(1)
   })
 
+  it('onDismiss skips scrollToIndex without throwing when activeJobIndex is -1 (notification/deep-link-opened job with no known list position) (R7, push-notifications)', async () => {
+    const scrollToIndex = jest.fn().mockResolvedValue(undefined)
+    setActiveJobId('job-1', clearActiveJob, {
+      activeJobIndex: -1,
+      flashListRef: { current: { scrollToIndex } },
+    })
+    const { UNSAFE_root } = render(<ProtectedLayout />)
+
+    await waitFor(() => {
+      expect(UNSAFE_root.findAllByType('MockBottomSheetModal').length).toBe(1)
+    })
+    const sheetNode = UNSAFE_root.findByType('MockBottomSheetModal')
+
+    act(() => {
+      sheetNode.props.onDismiss()
+    })
+
+    expect(scrollToIndex).not.toHaveBeenCalled()
+    expect(clearActiveJob).toHaveBeenCalledTimes(1)
+  })
+
   it('does not crash and still clears the active job when scrollToIndex rejects (R7)', async () => {
     const scrollToIndex = jest.fn().mockRejectedValue(new Error('index out of range'))
     setActiveJobId('job-1', clearActiveJob, {
@@ -339,5 +376,98 @@ describe('ProtectedLayout sheet wiring', () => {
     }).not.toThrow()
 
     expect(clearActiveJob).toHaveBeenCalledTimes(1)
+  })
+
+  it('a foreground PRESS event carrying data.jobId calls setActiveJob(jobId, -1) (R3)', async () => {
+    const setActiveJob = jest.fn()
+    setActiveJobId(null, clearActiveJob, { setActiveJob })
+    const mockedOnForegroundEvent = notifee.onForegroundEvent as jest.Mock
+
+    const { UNSAFE_root } = render(<ProtectedLayout />)
+    await waitFor(() => {
+      expect(UNSAFE_root.findAllByType('MockBottomSheetModal').length).toBe(1)
+    })
+
+    // `notifee.onForegroundEvent` is registered inside a mount `useEffect` —
+    // grab the callback that was passed to it and invoke it directly to
+    // simulate a notification press, mirroring `job-detail-swipe`'s
+    // "capture the registered callback" pattern (real OS-level notification
+    // taps are not meaningfully testable under RNTL).
+    expect(mockedOnForegroundEvent).toHaveBeenCalledTimes(1)
+    const foregroundHandler = mockedOnForegroundEvent.mock.calls[0][0] as (event: {
+      type: number
+      detail: { notification?: { data?: Record<string, unknown> } }
+    }) => void
+
+    act(() => {
+      foregroundHandler({
+        type: EventType.PRESS,
+        detail: { notification: { data: { jobId: 'job-notif-1' } } },
+      })
+    })
+
+    expect(setActiveJob).toHaveBeenCalledWith('job-notif-1', -1)
+  })
+
+  it('a foreground event that is not a PRESS is a no-op (R3)', async () => {
+    const setActiveJob = jest.fn()
+    setActiveJobId(null, clearActiveJob, { setActiveJob })
+    const mockedOnForegroundEvent = notifee.onForegroundEvent as jest.Mock
+
+    const { UNSAFE_root } = render(<ProtectedLayout />)
+    await waitFor(() => {
+      expect(UNSAFE_root.findAllByType('MockBottomSheetModal').length).toBe(1)
+    })
+
+    const foregroundHandler = mockedOnForegroundEvent.mock.calls[0][0] as (event: {
+      type: number
+      detail: { notification?: { data?: Record<string, unknown> } }
+    }) => void
+
+    act(() => {
+      foregroundHandler({
+        type: EventType.DISMISSED,
+        detail: { notification: { data: { jobId: 'job-notif-1' } } },
+      })
+    })
+
+    expect(setActiveJob).not.toHaveBeenCalled()
+  })
+
+  it('consumes a pending quit-state job id via setActiveJob(jobId, -1) once hydration is ready, not before (R5)', async () => {
+    const setActiveJob = jest.fn()
+    setActiveJobId(null, clearActiveJob, { setActiveJob })
+    const { consumePendingJobId } = jest.requireMock('../../core/lib/pendingNotification') as {
+      consumePendingJobId: jest.Mock
+    }
+    consumePendingJobId.mockReturnValue('job-pending-1')
+
+    const { UNSAFE_root } = render(<ProtectedLayout />)
+
+    // While hydration is still resolving (before the `hydrate()` promise
+    // settles), the pending id must not be consumed yet.
+    expect(setActiveJob).not.toHaveBeenCalled()
+
+    await waitFor(() => {
+      expect(UNSAFE_root.findAllByType('MockBottomSheetModal').length).toBe(1)
+    })
+
+    expect(setActiveJob).toHaveBeenCalledWith('job-pending-1', -1)
+  })
+
+  it('does not call setActiveJob when there is no pending job id (R5)', async () => {
+    const setActiveJob = jest.fn()
+    setActiveJobId(null, clearActiveJob, { setActiveJob })
+    const { consumePendingJobId } = jest.requireMock('../../core/lib/pendingNotification') as {
+      consumePendingJobId: jest.Mock
+    }
+    consumePendingJobId.mockReturnValue(null)
+
+    const { UNSAFE_root } = render(<ProtectedLayout />)
+    await waitFor(() => {
+      expect(UNSAFE_root.findAllByType('MockBottomSheetModal').length).toBe(1)
+    })
+
+    expect(setActiveJob).not.toHaveBeenCalled()
   })
 })
