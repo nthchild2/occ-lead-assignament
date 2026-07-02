@@ -46,7 +46,8 @@
     "moduleNameMapper": {
       "^@occ/shared$": "<rootDir>/../packages/shared/src/index.ts",
       "^@react-native-async-storage/async-storage$": "@react-native-async-storage/async-storage/jest/async-storage-mock",
-      "^react-native-reanimated$": "react-native-reanimated/mock"
+      "^react-native-reanimated$": "react-native-reanimated/mock",
+      "^@notifee/react-native$": "@notifee/react-native/jest-mock.js"
     }
   },
   "devDependencies": {

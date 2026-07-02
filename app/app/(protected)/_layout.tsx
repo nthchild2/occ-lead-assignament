@@ -1,8 +1,11 @@
 import { BottomSheetModal } from '@gorhom/bottom-sheet'
+import notifee, { EventType } from '@notifee/react-native'
+import type { Event as NotifeeEvent } from '@notifee/react-native'
 import { useEffect, useRef, useState } from 'react'
 import { Redirect, Slot } from 'expo-router'
 import { ActivityIndicator, View } from 'react-native'
 
+import { consumePendingJobId } from '../../core/lib/pendingNotification'
 import { useTheme } from '../../core/hooks/useTheme'
 import { useApplicationsStore } from '../../store/applications.store'
 import { useAuthStore } from '../../store/auth.store'
@@ -42,7 +45,12 @@ export async function handleLogout(): Promise<void> {
  */
 function handleSheetDismiss(): void {
   const { flashListRef, activeJobIndex } = useJobsStore.getState()
-  if (flashListRef?.current && activeJobIndex !== null) {
+  // `activeJobIndex` is `-1` for jobs opened via a notification tap / deep
+  // link (push-notifications' `setActiveJob(id, -1)` calls) — there is no
+  // known list position to scroll to for those, so `-1` (like `null`) must
+  // skip `scrollToIndex` rather than being passed straight through to
+  // FlashList, which would throw/misbehave on a negative index.
+  if (flashListRef?.current && activeJobIndex !== null && activeJobIndex >= 0) {
     try {
       flashListRef.current.scrollToIndex({ index: activeJobIndex, animated: false }).catch(() => {})
     } catch {
@@ -50,6 +58,40 @@ function handleSheetDismiss(): void {
     }
   }
   useJobsStore.getState().clearActiveJob()
+}
+
+/**
+ * R3: already-authenticated foreground notification tap. Extracted as a
+ * standalone function (mirrors `handleSheetDismiss` above) to keep
+ * `ProtectedLayout` under the eslint `complexity: 10` ceiling — this is
+ * registered via `notifee.onForegroundEvent` in a mount effect below. Only
+ * `EventType.PRESS` carries a job id worth acting on; other event types
+ * (dismiss, delivered, etc.) are no-ops here. `-1` is passed as the index —
+ * there is no known list position for a job opened via notification tap
+ * (see `handleSheetDismiss`'s `-1` guard above).
+ */
+function handleForegroundPress(event: NotifeeEvent): void {
+  if (event.type !== EventType.PRESS) return
+  const jobId = event.detail.notification?.data?.jobId
+  if (typeof jobId === 'string') {
+    useJobsStore.getState().setActiveJob(jobId, -1)
+  }
+}
+
+/**
+ * R5: quit-state notification handoff. `app/_layout.tsx` stashes a job id
+ * (via `setPendingJobId`) when the app cold-starts from a notification tap,
+ * before this layout's own `hydrate()` has resolved — reading it here, only
+ * once `hydration` is `'ready'`, ensures `setActiveJob` never fires while
+ * the auth guard could still redirect to `/login`. Extracted as a standalone
+ * function for the same complexity-budget reason as `handleForegroundPress`.
+ */
+function consumePendingIfReady(hydration: HydrationState): void {
+  if (hydration !== 'ready') return
+  const jobId = consumePendingJobId()
+  if (jobId) {
+    useJobsStore.getState().setActiveJob(jobId, -1)
+  }
 }
 
 // The guard for the entire protected subtree (R3). No token → redirect
@@ -89,6 +131,23 @@ export default function ProtectedLayout() {
       sheetRef.current?.present()
     }
   }, [activeJobId])
+
+  // R3: already authenticated here, so a foreground notification press can
+  // call `setActiveJob` directly — no deep-link route round-trip needed.
+  // Registered/unsubscribed once per mount; `notifee.onForegroundEvent`
+  // returns its own unsubscribe function (per notifee's API).
+  useEffect(() => {
+    const unsubscribe = notifee.onForegroundEvent(handleForegroundPress)
+    return unsubscribe
+  }, [])
+
+  // R5: consume a quit-state notification's held job id only once hydration
+  // has resolved (see `consumePendingIfReady`'s doc comment above) — runs on
+  // every `hydration` change but is a no-op except the one time it flips to
+  // `'ready'` with a pending id actually set.
+  useEffect(() => {
+    consumePendingIfReady(hydration)
+  }, [hydration])
 
   if (!token) {
     return <Redirect href="/(auth)/login" />

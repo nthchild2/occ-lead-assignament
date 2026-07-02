@@ -4,7 +4,16 @@ import { KeyboardAvoidingView, Platform, Text, View } from 'react-native'
 
 import { Button, Input } from '../../core/components'
 import { useTheme } from '../../core/hooks/useTheme'
+import { triggerDemoJobNotification } from '../../core/services/notifications.service'
 import { useAuthStore } from '../../store/auth.store'
+
+// R2: there is no real backend push source (per spec's "explicitly out of
+// scope"), so a demo "Nueva vacante para ti" notification fires once after
+// every successful login as a realistic proxy for "a new job notification
+// arrives while using the app" (see 02-plan.md's Approach — rejected a
+// dev-only button to avoid a one-shot-need UI surface). Placeholder id: no
+// job list is guaranteed to be loaded yet at this point in the flow.
+const DEMO_JOB_ID = 'demo-job-1'
 
 interface FieldErrors {
   email?: string
@@ -43,6 +52,7 @@ export default function LoginScreen() {
     setIsSubmitting(true)
     try {
       await useAuthStore.getState().login(email, password)
+      triggerDemoJobNotification(DEMO_JOB_ID)
     } catch (err) {
       setFormError(err instanceof Error ? err.message : 'Unknown error')
     } finally {
