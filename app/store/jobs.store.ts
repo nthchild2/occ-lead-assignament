@@ -17,7 +17,7 @@ interface JobsStore {
   // `persist` middleware today (A2 Decision 1 — only `auth.store` persists),
   // and this field must NEVER be added to a future `persist`/`partialize`
   // config if one is introduced.
-  flashListRef: React.RefObject<FlashListRef<Job>> | null
+  flashListRef: React.RefObject<FlashListRef<Job> | null> | null
   setFilters: (partial: Partial<JobFilters>) => void
   appendJobs: (newJobs: Job[], pagination: Pagination) => void
   resetList: () => void
@@ -25,7 +25,7 @@ interface JobsStore {
   setError: (error: string | null) => void
   setActiveJob: (id: string, index: number) => void
   clearActiveJob: () => void
-  setFlashListRef: (ref: React.RefObject<FlashListRef<Job>>) => void
+  setFlashListRef: (ref: React.RefObject<FlashListRef<Job> | null>) => void
 }
 
 const initialPagination: Pagination = {

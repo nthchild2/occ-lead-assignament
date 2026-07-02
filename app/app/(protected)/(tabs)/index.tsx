@@ -135,7 +135,7 @@ function ListContent({
   onRetry: () => void
   onEndReached: () => void
   onJobPress: (job: Job, index: number) => void
-  flashListRef: React.RefObject<FlashListRef<Job>>
+  flashListRef: React.RefObject<FlashListRef<Job> | null>
 }) {
   if (isLoading && jobs.length === 0) {
     return (

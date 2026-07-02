@@ -1,11 +1,11 @@
 import { BottomSheetModalProvider } from '@gorhom/bottom-sheet'
-import notifee from '@notifee/react-native'
 import { Slot } from 'expo-router'
 import { useEffect } from 'react'
 import { GestureHandlerRootView } from 'react-native-gesture-handler'
 import { SafeAreaProvider } from 'react-native-safe-area-context'
 
 import { setPendingJobId } from '../core/lib/pendingNotification'
+import { getNotifee } from '../core/lib/notifeeCompat'
 import { useThemeFonts } from '../core/hooks/useThemeFonts'
 import { initNotificationChannel } from '../core/services/notifications.service'
 
@@ -16,8 +16,9 @@ import { initNotificationChannel } from '../core/services/notifications.service'
 // re-registered. This layout has no auth/hydration awareness (that lives in
 // `(protected)/_layout.tsx`), so a background press only stashes the job id
 // via `setPendingJobId` for that layout to consume once it's ready — it
-// never navigates directly.
-notifee.onBackgroundEvent(async (event) => {
+// never navigates directly. `getNotifee()` returns `null` in Expo Go (see
+// `notifeeCompat.ts`), in which case there is nothing to register.
+getNotifee()?.notifee.onBackgroundEvent(async (event) => {
   const jobId = event.detail.notification?.data?.jobId
   if (typeof jobId === 'string') {
     setPendingJobId(jobId)
@@ -43,12 +44,14 @@ export default function RootLayout() {
   useEffect(() => {
     initNotificationChannel()
 
-    notifee.getInitialNotification().then((initial) => {
-      const jobId = initial?.notification.data?.jobId
-      if (typeof jobId === 'string') {
-        setPendingJobId(jobId)
-      }
-    })
+    getNotifee()
+      ?.notifee.getInitialNotification()
+      .then((initial) => {
+        const jobId = initial?.notification.data?.jobId
+        if (typeof jobId === 'string') {
+          setPendingJobId(jobId)
+        }
+      })
   }, [])
 
   if (!fontsLoaded) {

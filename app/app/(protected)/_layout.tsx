@@ -1,11 +1,11 @@
 import { BottomSheetModal } from '@gorhom/bottom-sheet'
-import notifee, { EventType } from '@notifee/react-native'
 import type { Event as NotifeeEvent } from '@notifee/react-native'
 import { useEffect, useRef, useState } from 'react'
 import { Redirect, Slot } from 'expo-router'
 import { ActivityIndicator, View } from 'react-native'
 
 import { consumePendingJobId } from '../../core/lib/pendingNotification'
+import { getNotifee } from '../../core/lib/notifeeCompat'
 import { useTheme } from '../../core/hooks/useTheme'
 import { useApplicationsStore } from '../../store/applications.store'
 import { useAuthStore } from '../../store/auth.store'
@@ -71,7 +71,8 @@ function handleSheetDismiss(): void {
  * (see `handleSheetDismiss`'s `-1` guard above).
  */
 function handleForegroundPress(event: NotifeeEvent): void {
-  if (event.type !== EventType.PRESS) return
+  const mod = getNotifee()
+  if (!mod || event.type !== mod.EventType.PRESS) return
   const jobId = event.detail.notification?.data?.jobId
   if (typeof jobId === 'string') {
     useJobsStore.getState().setActiveJob(jobId, -1)
@@ -137,7 +138,7 @@ export default function ProtectedLayout() {
   // Registered/unsubscribed once per mount; `notifee.onForegroundEvent`
   // returns its own unsubscribe function (per notifee's API).
   useEffect(() => {
-    const unsubscribe = notifee.onForegroundEvent(handleForegroundPress)
+    const unsubscribe = getNotifee()?.notifee.onForegroundEvent(handleForegroundPress)
     return unsubscribe
   }, [])
 

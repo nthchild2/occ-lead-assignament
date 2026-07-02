@@ -17,9 +17,6 @@
       },
       "package": "com.occ.lead"
     },
-    "plugins": ["expo-router", "@react-native-firebase/app", "expo-font"],
-    "experiments": {
-      "typedRoutes": true
-    }
+    "plugins": ["expo-router", "@react-native-firebase/app", "expo-font"]
   }
 }
