@@ -887,6 +887,186 @@ exports[`core/components snapshots (A4 snapshot policy) Card — static 1`] = `
 </View>
 `;
 
+exports[`core/components snapshots (A4 snapshot policy) CollapsibleHeader — collapsed state 1`] = `
+<View
+  accessibilityHint="Expandir Filtros"
+  accessibilityLabel="Filtros"
+  accessibilityRole="button"
+  accessibilityState={
+    {
+      "busy": undefined,
+      "checked": undefined,
+      "disabled": undefined,
+      "expanded": false,
+      "selected": undefined,
+    }
+  }
+  accessibilityValue={
+    {
+      "max": undefined,
+      "min": undefined,
+      "now": undefined,
+      "text": undefined,
+    }
+  }
+  accessible={true}
+  collapsable={false}
+  focusable={true}
+  onBlur={[Function]}
+  onClick={[Function]}
+  onFocus={[Function]}
+  onResponderGrant={[Function]}
+  onResponderMove={[Function]}
+  onResponderRelease={[Function]}
+  onResponderTerminate={[Function]}
+  onResponderTerminationRequest={[Function]}
+  onStartShouldSetResponder={[Function]}
+  style={
+    [
+      {
+        "alignItems": "center",
+        "flexDirection": "row",
+        "justifyContent": "space-between",
+      },
+      {
+        "paddingHorizontal": 20,
+        "paddingVertical": 12,
+      },
+    ]
+  }
+>
+  <Text
+    style={
+      [
+        {
+          "flex": 1,
+        },
+        {
+          "color": "#08080C",
+          "fontFamily": "Inter_400Regular",
+          "fontSize": 16,
+        },
+      ]
+    }
+  >
+    Filtros
+  </Text>
+  <View
+    style={
+      {
+        "transform": [
+          {
+            "rotate": "0deg",
+          },
+        ],
+      }
+    }
+  >
+    <Text />
+  </View>
+</View>
+`;
+
+exports[`core/components snapshots (A4 snapshot policy) CollapsibleHeader — expanded state 1`] = `
+<View
+  accessibilityHint="Contraer Filtros"
+  accessibilityLabel="Filtros"
+  accessibilityRole="button"
+  accessibilityState={
+    {
+      "busy": undefined,
+      "checked": undefined,
+      "disabled": undefined,
+      "expanded": true,
+      "selected": undefined,
+    }
+  }
+  accessibilityValue={
+    {
+      "max": undefined,
+      "min": undefined,
+      "now": undefined,
+      "text": undefined,
+    }
+  }
+  accessible={true}
+  collapsable={false}
+  focusable={true}
+  onBlur={[Function]}
+  onClick={[Function]}
+  onFocus={[Function]}
+  onResponderGrant={[Function]}
+  onResponderMove={[Function]}
+  onResponderRelease={[Function]}
+  onResponderTerminate={[Function]}
+  onResponderTerminationRequest={[Function]}
+  onStartShouldSetResponder={[Function]}
+  style={
+    [
+      {
+        "alignItems": "center",
+        "flexDirection": "row",
+        "justifyContent": "space-between",
+      },
+      {
+        "paddingHorizontal": 20,
+        "paddingVertical": 12,
+      },
+    ]
+  }
+>
+  <Text
+    style={
+      [
+        {
+          "flex": 1,
+        },
+        {
+          "color": "#08080C",
+          "fontFamily": "Inter_400Regular",
+          "fontSize": 16,
+        },
+      ]
+    }
+  >
+    Filtros
+  </Text>
+  <View
+    style={
+      {
+        "transform": [
+          {
+            "rotate": "0deg",
+          },
+        ],
+      }
+    }
+  >
+    <Text
+      allowFontScaling={false}
+      selectable={false}
+      style={
+        [
+          {
+            "color": "#08080C",
+            "fontSize": 20,
+          },
+          undefined,
+          {
+            "fontFamily": "material-community",
+            "fontStyle": "normal",
+            "fontWeight": "normal",
+          },
+          {},
+        ]
+      }
+    >
+      󰅀
+    </Text>
+  </View>
+</View>
+`;
+
 exports[`core/components snapshots (A4 snapshot policy) EmptyState — with description and action 1`] = `
 <View
   style={

@@ -1,6 +1,7 @@
 import type { Job } from '@occ/shared'
 import { render } from '@testing-library/react-native'
 import React from 'react'
+import { Text } from 'react-native'
 
 import {
   ActivityList,
@@ -8,6 +9,7 @@ import {
   Badge,
   Button,
   Card,
+  CollapsibleHeader,
   EmptyState,
   ErrorState,
   Input,
@@ -16,7 +18,6 @@ import {
   Select,
   Skeleton,
 } from './index'
-import { Text } from 'react-native'
 
 // A4 Decision 1 (snapshot policy): every component in the `core/components/`
 // library carries a snapshot for regression detection. Behavioral assertions
@@ -174,5 +175,17 @@ describe('core/components snapshots (A4 snapshot policy)', () => {
 
   it('Skeleton — custom size', () => {
     expect(render(<Skeleton width={120} height={24} />).toJSON()).toMatchSnapshot()
+  })
+
+  it('CollapsibleHeader — collapsed state', () => {
+    expect(
+      render(<CollapsibleHeader label="Filtros" isExpanded={false} onToggle={noop} />).toJSON(),
+    ).toMatchSnapshot()
+  })
+
+  it('CollapsibleHeader — expanded state', () => {
+    expect(
+      render(<CollapsibleHeader label="Filtros" isExpanded onToggle={noop} />).toJSON(),
+    ).toMatchSnapshot()
   })
 })

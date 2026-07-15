@@ -2,10 +2,11 @@ import type { Job, JobFilters } from '@occ/shared'
 import { FlashList, type FlashListRef } from '@shopify/flash-list'
 import type React from 'react'
 import { useEffect, useRef, useState } from 'react'
-import { Text, View } from 'react-native'
+import { Animated, Text, View } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 
 import {
+  CollapsibleHeader,
   EmptyState,
   ErrorState,
   Input,
@@ -66,6 +67,8 @@ interface FilterBarProps {
   onCityChange: (value: string) => void
   sort: NonNullable<JobFilters['sort']>
   onSortChange: (value: NonNullable<JobFilters['sort']>) => void
+  isExpanded: boolean
+  onToggleExpanded: () => void
 }
 
 // Extracted so the screen component's own branching stays under the
@@ -82,39 +85,72 @@ function FilterBar({
   onCityChange,
   sort,
   onSortChange,
+  isExpanded,
+  onToggleExpanded,
 }: FilterBarProps) {
+  const heightAnim = useRef(new Animated.Value(1)).current
+
+  useEffect(() => {
+    Animated.timing(heightAnim, {
+      toValue: isExpanded ? 1 : 0,
+      duration: theme.motion.base.duration,
+      useNativeDriver: false,
+    }).start()
+  }, [isExpanded, heightAnim, theme.motion.base.duration])
+
   return (
-    <View style={{ padding: theme.gutter, gap: theme.spacing[3] }}>
-      <Input
-        label="Buscar"
-        placeholder="Puesto, empresa o palabra clave"
-        value={searchText}
-        onChangeText={onSearchTextChange}
-        autoCapitalize="none"
-        autoCorrect={false}
-      />
-      <View style={{ flexDirection: 'row', gap: theme.spacing[3] }}>
-        <View style={{ flex: 1 }}>
+    <View
+      style={{
+        backgroundColor: theme.colors.surface,
+        borderBottomColor: theme.colors.border,
+        borderBottomWidth: 1,
+      }}
+    >
+      <CollapsibleHeader label="Filtros" isExpanded={isExpanded} onToggle={onToggleExpanded} />
+
+      <Animated.View
+        style={{
+          opacity: heightAnim,
+          maxHeight: heightAnim.interpolate({
+            inputRange: [0, 1],
+            outputRange: [0, 500],
+          }),
+          overflow: 'hidden',
+        }}
+      >
+        <View style={{ padding: theme.gutter, gap: theme.spacing[3] }}>
           <Input
-            label="Salario mín."
-            placeholder="0"
-            value={salaryMinText}
-            onChangeText={onSalaryMinTextChange}
-            keyboardType="numeric"
+            label="Buscar"
+            placeholder="Puesto, empresa o palabra clave"
+            value={searchText}
+            onChangeText={onSearchTextChange}
+            autoCapitalize="none"
+            autoCorrect={false}
           />
+          <View style={{ flexDirection: 'row', gap: theme.spacing[3] }}>
+            <View style={{ flex: 1 }}>
+              <Input
+                label="Salario mín."
+                placeholder="0"
+                value={salaryMinText}
+                onChangeText={onSalaryMinTextChange}
+                keyboardType="numeric"
+              />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Input
+                label="Salario máx."
+                placeholder="Sin límite"
+                value={salaryMaxText}
+                onChangeText={onSalaryMaxTextChange}
+                keyboardType="numeric"
+              />
+            </View>
+          </View>
+          <Select label="Ciudad" value={city} options={CITY_OPTIONS} onChange={onCityChange} />
+          <Select label="Ordenar por" value={sort} options={SORT_OPTIONS} onChange={onSortChange} />
         </View>
-        <View style={{ flex: 1 }}>
-          <Input
-            label="Salario máx."
-            placeholder="Sin límite"
-            value={salaryMaxText}
-            onChangeText={onSalaryMaxTextChange}
-            keyboardType="numeric"
-          />
-        </View>
-      </View>
-      <Select label="Ciudad" value={city} options={CITY_OPTIONS} onChange={onCityChange} />
-      <Select label="Ordenar por" value={sort} options={SORT_OPTIONS} onChange={onSortChange} />
+      </Animated.View>
     </View>
   )
 }
@@ -127,6 +163,7 @@ function ListContent({
   onRetry,
   onEndReached,
   onJobPress,
+  onScroll,
   flashListRef,
 }: {
   theme: Theme
@@ -136,6 +173,7 @@ function ListContent({
   onRetry: () => void
   onEndReached: () => void
   onJobPress: (job: Job, index: number) => void
+  onScroll: () => void
   flashListRef: React.RefObject<FlashListRef<Job> | null>
 }) {
   if (isLoading && jobs.length === 0) {
@@ -170,6 +208,7 @@ function ListContent({
       drawDistance={250}
       onEndReached={onEndReached}
       onEndReachedThreshold={0.5}
+      onScroll={onScroll}
       contentContainerStyle={{ paddingHorizontal: theme.gutter, paddingBottom: theme.spacing[6] }}
     />
   )
@@ -192,6 +231,7 @@ export default function SearchScreen() {
   const [salaryMaxText, setSalaryMaxText] = useState('')
   const [city, setCity] = useState(ALL_CITIES)
   const [sort, setSort] = useState<NonNullable<JobFilters['sort']>>('date_desc')
+  const [isFiltersExpanded, setIsFiltersExpanded] = useState(true)
 
   const debouncedSearch = useDebounce(searchText, 300)
   const debouncedSalaryMin = useDebounce(salaryMinText, 300)
@@ -257,6 +297,12 @@ export default function SearchScreen() {
     useJobsStore.getState().setActiveJob(job.id, index)
   }
 
+  function handleListScroll(): void {
+    if (isFiltersExpanded) {
+      setIsFiltersExpanded(false)
+    }
+  }
+
   return (
     <View style={{ flex: 1, backgroundColor: theme.colors.bg }}>
       <Text
@@ -266,6 +312,7 @@ export default function SearchScreen() {
           color: theme.colors.fg,
           paddingHorizontal: theme.gutter,
           paddingTop: insets.top + theme.spacing[3],
+          paddingBottom: theme.spacing[2],
         }}
       >
         Buscar empleos
@@ -282,6 +329,8 @@ export default function SearchScreen() {
         onCityChange={handleCityChange}
         sort={sort}
         onSortChange={handleSortChange}
+        isExpanded={isFiltersExpanded}
+        onToggleExpanded={() => setIsFiltersExpanded(!isFiltersExpanded)}
       />
       <View style={{ flex: 1 }}>
         <ListContent
@@ -292,6 +341,7 @@ export default function SearchScreen() {
           onRetry={refetch}
           onEndReached={fetchNextPage}
           onJobPress={handleJobPress}
+          onScroll={handleListScroll}
           flashListRef={flashListRef}
         />
       </View>

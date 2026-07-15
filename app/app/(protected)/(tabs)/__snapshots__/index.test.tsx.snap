@@ -15,6 +15,7 @@ exports[`SearchScreen snapshot (A4 snapshot policy) matches the completed-screen
         "color": "#08080C",
         "fontFamily": "Inter_600SemiBold",
         "fontSize": 18,
+        "paddingBottom": 8,
         "paddingHorizontal": 20,
         "paddingTop": 12,
       }
@@ -25,68 +26,124 @@ exports[`SearchScreen snapshot (A4 snapshot policy) matches the completed-screen
   <View
     style={
       {
-        "gap": 12,
-        "padding": 20,
+        "backgroundColor": "#FFFFFF",
+        "borderBottomColor": "#DDDDE6",
+        "borderBottomWidth": 1,
       }
     }
   >
-    <View>
-      <Text
-        style={
-          {
-            "color": "#55556A",
-            "fontFamily": "Inter_700Bold",
-            "fontSize": 11,
-            "fontWeight": "700",
-            "letterSpacing": 1.76,
-            "marginBottom": 8,
-            "textTransform": "uppercase",
-          }
+    <View
+      accessibilityHint="Contraer Filtros"
+      accessibilityLabel="Filtros"
+      accessibilityRole="button"
+      accessibilityState={
+        {
+          "busy": undefined,
+          "checked": undefined,
+          "disabled": undefined,
+          "expanded": true,
+          "selected": undefined,
         }
-      >
-        Buscar
-      </Text>
-      <TextInput
-        accessibilityHint="Puesto, empresa o palabra clave"
-        accessibilityLabel="Buscar"
-        autoCapitalize="none"
-        autoCorrect={false}
-        onBlur={[Function]}
-        onChangeText={[Function]}
-        onFocus={[Function]}
-        placeholder="Puesto, empresa o palabra clave"
-        placeholderTextColor="#6E6E8A"
+      }
+      accessibilityValue={
+        {
+          "max": undefined,
+          "min": undefined,
+          "now": undefined,
+          "text": undefined,
+        }
+      }
+      accessible={true}
+      collapsable={false}
+      focusable={true}
+      onBlur={[Function]}
+      onClick={[Function]}
+      onFocus={[Function]}
+      onResponderGrant={[Function]}
+      onResponderMove={[Function]}
+      onResponderRelease={[Function]}
+      onResponderTerminate={[Function]}
+      onResponderTerminationRequest={[Function]}
+      onStartShouldSetResponder={[Function]}
+      style={
+        [
+          {
+            "alignItems": "center",
+            "flexDirection": "row",
+            "justifyContent": "space-between",
+          },
+          {
+            "paddingHorizontal": 20,
+            "paddingVertical": 12,
+          },
+        ]
+      }
+    >
+      <Text
         style={
           [
             {
-              "backgroundColor": "#E8E8F0",
-              "borderColor": "#B8B8CB",
-              "borderRadius": 8,
-              "borderWidth": 1,
+              "flex": 1,
+            },
+            {
               "color": "#08080C",
               "fontFamily": "Inter_400Regular",
               "fontSize": 16,
-              "height": 48,
-              "paddingHorizontal": 16,
             },
-            undefined,
           ]
         }
-        value=""
-      />
+      >
+        Filtros
+      </Text>
+      <View
+        style={
+          {
+            "transform": [
+              {
+                "rotate": "0deg",
+              },
+            ],
+          }
+        }
+      >
+        <Text
+          allowFontScaling={false}
+          selectable={false}
+          style={
+            [
+              {
+                "color": "#08080C",
+                "fontSize": 20,
+              },
+              undefined,
+              {
+                "fontFamily": "material-community",
+                "fontStyle": "normal",
+                "fontWeight": "normal",
+              },
+              {},
+            ]
+          }
+        >
+          󰅀
+        </Text>
+      </View>
     </View>
     <View
+      collapsable={false}
       style={
         {
-          "flexDirection": "row",
-          "gap": 12,
+          "maxHeight": 500,
+          "opacity": 1,
+          "overflow": "hidden",
         }
       }
     >
       <View
         style={
           {
-            "flex": 1,
+            "gap": 12,
+            "padding": 20,
           }
         }
       >
@@ -104,16 +161,17 @@ exports[`SearchScreen snapshot (A4 snapshot policy) matches the completed-screen
               }
             }
           >
-            Salario mín.
+            Buscar
           </Text>
           <TextInput
-            accessibilityHint="0"
-            accessibilityLabel="Salario mín."
-            keyboardType="numeric"
+            accessibilityHint="Puesto, empresa o palabra clave"
+            accessibilityLabel="Buscar"
+            autoCapitalize="none"
+            autoCorrect={false}
             onBlur={[Function]}
             onChangeText={[Function]}
             onFocus={[Function]}
-            placeholder="0"
+            placeholder="Puesto, empresa o palabra clave"
             placeholderTextColor="#6E6E8A"
             style={
               [
@@ -134,14 +192,119 @@ exports[`SearchScreen snapshot (A4 snapshot policy) matches the completed-screen
             value=""
           />
         </View>
-      </View>
-      <View
-        style={
-          {
-            "flex": 1,
+        <View
+          style={
+            {
+              "flexDirection": "row",
+              "gap": 12,
+            }
           }
-        }
-      >
+        >
+          <View
+            style={
+              {
+                "flex": 1,
+              }
+            }
+          >
+            <View>
+              <Text
+                style={
+                  {
+                    "color": "#55556A",
+                    "fontFamily": "Inter_700Bold",
+                    "fontSize": 11,
+                    "fontWeight": "700",
+                    "letterSpacing": 1.76,
+                    "marginBottom": 8,
+                    "textTransform": "uppercase",
+                  }
+                }
+              >
+                Salario mín.
+              </Text>
+              <TextInput
+                accessibilityHint="0"
+                accessibilityLabel="Salario mín."
+                keyboardType="numeric"
+                onBlur={[Function]}
+                onChangeText={[Function]}
+                onFocus={[Function]}
+                placeholder="0"
+                placeholderTextColor="#6E6E8A"
+                style={
+                  [
+                    {
+                      "backgroundColor": "#E8E8F0",
+                      "borderColor": "#B8B8CB",
+                      "borderRadius": 8,
+                      "borderWidth": 1,
+                      "color": "#08080C",
+                      "fontFamily": "Inter_400Regular",
+                      "fontSize": 16,
+                      "height": 48,
+                      "paddingHorizontal": 16,
+                    },
+                    undefined,
+                  ]
+                }
+                value=""
+              />
+            </View>
+          </View>
+          <View
+            style={
+              {
+                "flex": 1,
+              }
+            }
+          >
+            <View>
+              <Text
+                style={
+                  {
+                    "color": "#55556A",
+                    "fontFamily": "Inter_700Bold",
+                    "fontSize": 11,
+                    "fontWeight": "700",
+                    "letterSpacing": 1.76,
+                    "marginBottom": 8,
+                    "textTransform": "uppercase",
+                  }
+                }
+              >
+                Salario máx.
+              </Text>
+              <TextInput
+                accessibilityHint="Sin límite"
+                accessibilityLabel="Salario máx."
+                keyboardType="numeric"
+                onBlur={[Function]}
+                onChangeText={[Function]}
+                onFocus={[Function]}
+                placeholder="Sin límite"
+                placeholderTextColor="#6E6E8A"
+                style={
+                  [
+                    {
+                      "backgroundColor": "#E8E8F0",
+                      "borderColor": "#B8B8CB",
+                      "borderRadius": 8,
+                      "borderWidth": 1,
+                      "color": "#08080C",
+                      "fontFamily": "Inter_400Regular",
+                      "fontSize": 16,
+                      "height": 48,
+                      "paddingHorizontal": 16,
+                    },
+                    undefined,
+                  ]
+                }
+                value=""
+              />
+            </View>
+          </View>
+        </View>
         <View>
           <Text
             style={
@@ -156,184 +319,140 @@ exports[`SearchScreen snapshot (A4 snapshot policy) matches the completed-screen
               }
             }
           >
-            Salario máx.
+            Ciudad
           </Text>
-          <TextInput
-            accessibilityHint="Sin límite"
-            accessibilityLabel="Salario máx."
-            keyboardType="numeric"
+          <View
+            accessibilityRole="button"
+            accessibilityState={
+              {
+                "busy": undefined,
+                "checked": undefined,
+                "disabled": undefined,
+                "expanded": undefined,
+                "selected": undefined,
+              }
+            }
+            accessibilityValue={
+              {
+                "max": undefined,
+                "min": undefined,
+                "now": undefined,
+                "text": undefined,
+              }
+            }
+            accessible={true}
+            collapsable={false}
+            focusable={true}
             onBlur={[Function]}
-            onChangeText={[Function]}
+            onClick={[Function]}
             onFocus={[Function]}
-            placeholder="Sin límite"
-            placeholderTextColor="#6E6E8A"
+            onResponderGrant={[Function]}
+            onResponderMove={[Function]}
+            onResponderRelease={[Function]}
+            onResponderTerminate={[Function]}
+            onResponderTerminationRequest={[Function]}
+            onStartShouldSetResponder={[Function]}
             style={
-              [
+              {
+                "alignItems": "center",
+                "backgroundColor": "#E8E8F0",
+                "borderColor": "#B8B8CB",
+                "borderRadius": 8,
+                "borderWidth": 1,
+                "flexDirection": "row",
+                "height": 44,
+                "justifyContent": "space-between",
+                "paddingHorizontal": 14,
+              }
+            }
+          >
+            <Text
+              style={
                 {
-                  "backgroundColor": "#E8E8F0",
-                  "borderColor": "#B8B8CB",
-                  "borderRadius": 8,
-                  "borderWidth": 1,
                   "color": "#08080C",
                   "fontFamily": "Inter_400Regular",
-                  "fontSize": 16,
-                  "height": 48,
-                  "paddingHorizontal": 16,
-                },
-                undefined,
-              ]
-            }
-            value=""
-          />
+                  "fontSize": 14,
+                }
+              }
+            >
+              Todas las ciudades
+            </Text>
+          </View>
         </View>
-      </View>
-    </View>
-    <View>
-      <Text
-        style={
-          {
-            "color": "#55556A",
-            "fontFamily": "Inter_700Bold",
-            "fontSize": 11,
-            "fontWeight": "700",
-            "letterSpacing": 1.76,
-            "marginBottom": 8,
-            "textTransform": "uppercase",
-          }
-        }
-      >
-        Ciudad
-      </Text>
-      <View
-        accessibilityRole="button"
-        accessibilityState={
-          {
-            "busy": undefined,
-            "checked": undefined,
-            "disabled": undefined,
-            "expanded": undefined,
-            "selected": undefined,
-          }
-        }
-        accessibilityValue={
-          {
-            "max": undefined,
-            "min": undefined,
-            "now": undefined,
-            "text": undefined,
-          }
-        }
-        accessible={true}
-        collapsable={false}
-        focusable={true}
-        onBlur={[Function]}
-        onClick={[Function]}
-        onFocus={[Function]}
-        onResponderGrant={[Function]}
-        onResponderMove={[Function]}
-        onResponderRelease={[Function]}
-        onResponderTerminate={[Function]}
-        onResponderTerminationRequest={[Function]}
-        onStartShouldSetResponder={[Function]}
-        style={
-          {
-            "alignItems": "center",
-            "backgroundColor": "#E8E8F0",
-            "borderColor": "#B8B8CB",
-            "borderRadius": 8,
-            "borderWidth": 1,
-            "flexDirection": "row",
-            "height": 44,
-            "justifyContent": "space-between",
-            "paddingHorizontal": 14,
-          }
-        }
-      >
-        <Text
-          style={
-            {
-              "color": "#08080C",
-              "fontFamily": "Inter_400Regular",
-              "fontSize": 14,
+        <View>
+          <Text
+            style={
+              {
+                "color": "#55556A",
+                "fontFamily": "Inter_700Bold",
+                "fontSize": 11,
+                "fontWeight": "700",
+                "letterSpacing": 1.76,
+                "marginBottom": 8,
+                "textTransform": "uppercase",
+              }
             }
-          }
-        >
-          Todas las ciudades
-        </Text>
-      </View>
-    </View>
-    <View>
-      <Text
-        style={
-          {
-            "color": "#55556A",
-            "fontFamily": "Inter_700Bold",
-            "fontSize": 11,
-            "fontWeight": "700",
-            "letterSpacing": 1.76,
-            "marginBottom": 8,
-            "textTransform": "uppercase",
-          }
-        }
-      >
-        Ordenar por
-      </Text>
-      <View
-        accessibilityRole="button"
-        accessibilityState={
-          {
-            "busy": undefined,
-            "checked": undefined,
-            "disabled": undefined,
-            "expanded": undefined,
-            "selected": undefined,
-          }
-        }
-        accessibilityValue={
-          {
-            "max": undefined,
-            "min": undefined,
-            "now": undefined,
-            "text": undefined,
-          }
-        }
-        accessible={true}
-        collapsable={false}
-        focusable={true}
-        onBlur={[Function]}
-        onClick={[Function]}
-        onFocus={[Function]}
-        onResponderGrant={[Function]}
-        onResponderMove={[Function]}
-        onResponderRelease={[Function]}
-        onResponderTerminate={[Function]}
-        onResponderTerminationRequest={[Function]}
-        onStartShouldSetResponder={[Function]}
-        style={
-          {
-            "alignItems": "center",
-            "backgroundColor": "#E8E8F0",
-            "borderColor": "#B8B8CB",
-            "borderRadius": 8,
-            "borderWidth": 1,
-            "flexDirection": "row",
-            "height": 44,
-            "justifyContent": "space-between",
-            "paddingHorizontal": 14,
-          }
-        }
-      >
-        <Text
-          style={
-            {
-              "color": "#08080C",
-              "fontFamily": "Inter_400Regular",
-              "fontSize": 14,
+          >
+            Ordenar por
+          </Text>
+          <View
+            accessibilityRole="button"
+            accessibilityState={
+              {
+                "busy": undefined,
+                "checked": undefined,
+                "disabled": undefined,
+                "expanded": undefined,
+                "selected": undefined,
+              }
             }
-          }
-        >
-          Más recientes
-        </Text>
+            accessibilityValue={
+              {
+                "max": undefined,
+                "min": undefined,
+                "now": undefined,
+                "text": undefined,
+              }
+            }
+            accessible={true}
+            collapsable={false}
+            focusable={true}
+            onBlur={[Function]}
+            onClick={[Function]}
+            onFocus={[Function]}
+            onResponderGrant={[Function]}
+            onResponderMove={[Function]}
+            onResponderRelease={[Function]}
+            onResponderTerminate={[Function]}
+            onResponderTerminationRequest={[Function]}
+            onStartShouldSetResponder={[Function]}
+            style={
+              {
+                "alignItems": "center",
+                "backgroundColor": "#E8E8F0",
+                "borderColor": "#B8B8CB",
+                "borderRadius": 8,
+                "borderWidth": 1,
+                "flexDirection": "row",
+                "height": 44,
+                "justifyContent": "space-between",
+                "paddingHorizontal": 14,
+              }
+            }
+          >
+            <Text
+              style={
+                {
+                  "color": "#08080C",
+                  "fontFamily": "Inter_400Regular",
+                  "fontSize": 14,
+                }
+              }
+            >
+              Más recientes
+            </Text>
+          </View>
+        </View>
       </View>
     </View>
   </View>
