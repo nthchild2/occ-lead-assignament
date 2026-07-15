@@ -38,6 +38,7 @@ export function Input({ label, hint, error, style, onFocus, onBlur, ...rest }: I
       ) : null}
       <TextInput
         accessibilityLabel={label}
+        accessibilityHint={hint ?? rest.placeholder}
         placeholderTextColor={theme.colors.fgSubtle}
         onFocus={(e) => {
           setFocused(true)

@@ -418,3 +418,22 @@ describe('SearchScreen', () => {
     })
   })
 })
+
+// A4 snapshot policy: this screen is declared complete (job-search-screen
+// ticket PASS), so its rendered output is pinned — populated variant, with
+// two jobs (with/without salary) so both card item types are covered.
+describe('SearchScreen snapshot (A4 snapshot policy)', () => {
+  it('matches the completed-screen snapshot with results', () => {
+    setStoreState(
+      {
+        jobs: [makeJob(), makeJob({ id: 'job-2', title: 'Mobile Lead', salary: null })],
+        isLoading: false,
+        error: null,
+        pagination: { page: 1, limit: 20, total: 2, hasNext: false, hasPrev: false },
+      },
+      setFilters,
+      setActiveJob,
+    )
+    expect(render(<SearchScreen />).toJSON()).toMatchSnapshot()
+  })
+})

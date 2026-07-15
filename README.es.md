@@ -18,7 +18,7 @@ Este proyecto fue construido en cooperación con Claude Code, pero cada decisió
 
 ### El sistema de diseño
 
-`app/core/theme/` es la única fuente de verdad visual. `tokens.ts` contiene los valores crudos — una paleta de colores literal, escala de espaciado, tipografía, radios, sombras, duraciones de movimiento — para los esquemas claro y oscuro. `theme.ts` compone esos tokens crudos en una interfaz `Theme` que los componentes consumen vía `useTheme()`. Los componentes nunca hardcodean un color, un valor de espaciado o un tamaño de fuente; leen `theme.colors.fg`, `theme.spacing[3]`, `theme.type.headingSm`, etc. Esto está impuesto, no es solo convención — `.eslintrc.js` bloquea literales de estilo inline, y `import/no-restricted-paths` impide que un componente acceda directamente a `tokens.ts` saltándose la capa semántica.
+`app/core/theme/` es la única fuente de verdad visual. `tokens.ts` contiene los valores crudos — una paleta de colores literal, escala de espaciado, tipografía, radios, sombras, duraciones de movimiento — para los esquemas claro y oscuro. `theme.ts` compone esos tokens crudos en una interfaz `Theme` que los componentes consumen vía `useTheme()`. Los componentes nunca hardcodean un color, un valor de espaciado o un tamaño de fuente; leen `theme.colors.fg`, `theme.spacing[3]`, `theme.type.headingSm`, etc. La regla `no-restricted-imports` de `.eslintrc.js` impone que cualquier componente que importe `tokens.ts` directamente (solo `core/theme/` puede componer tokens crudos) falle en linting.
 
 El beneficio práctico: pasar de modo claro a oscuro, o rediseñar toda la app, es un cambio en un solo archivo (`tokens.ts`), no un buscar-y-reemplazar en cada pantalla. `app/core/components/` (`Button`, `Card`, `Input`, `Select`, `Badge`, `Skeleton`, `EmptyState`, `ErrorState`, …) es la librería de componentes resultante, cada uno guiado por el theme y reutilizable entre pantallas.
 
@@ -39,7 +39,7 @@ AIDLC (AI-Assisted Development Lifecycle) es el framework bajo el cual se constr
 
 - **La trazabilidad es mecánica, no aspiracional.** Cada requisito debe mapear a un cambio, y cada cambio debe mapear a un requisito — un requisito sin cambio es un hueco, un cambio sin requisito es scope creep, y ambos fallan la fase de verificación. Cada uno de los 15 tickets de feature en `docs/work/ROADMAP.md` tiene su propio `docs/work/<feature>/00-spec.md` hasta `04-verify.md`, formando un rastro comprometido y auditable de qué se construyó, por qué, y cómo se verificó.
 - **El gate de verificación es innegociable.** Ningún ticket se marca como terminado sin que `tsc --noEmit`, `eslint` y `jest` pasen en cada workspace que tocó. Esto detectó bugs reales durante la construcción (ver A6, Decisión 3, para la lista real) — incluyendo bugs que ya existían antes de cualquier cambio hecho por IA.
-- **Un hueco conocido, documentado con honestidad:** ese gate es `tsc`+`eslint`+`jest`, ninguno de los cuales realmente lanza la app. Un par de bugs a nivel de configuración (una entrada de plugin de Expo rota, una dependencia de logging de desarrollo faltante) solo salieron a la luz al correr la app de verdad, después de que los 15 tickets ya habían pasado su verificación de forma independiente. Eso está documentado en [`docs/work/push-notifications/05-post-verify-fix.md`](docs/work/push-notifications/05-post-verify-fix.md) como una corrección al registro, no se escondió bajo la alfombra.
+- **Un hueco en ese gate, encontrado y cerrado:** `tsc`+`eslint`+`jest` nunca lanzan realmente la app — no ejercitan Metro, Babel ni el runtime nativo de Expo Go. Bugs a nivel de configuración (una entrada de plugin de Expo rota, una dependencia de logging de desarrollo faltante) y, más tarde, una deriva de versiones del SDK (`babel-preset-expo`/`react-native-worklets` resolviendo más allá de lo que Expo Go 54 trae nativo — detectada por una revisión externa en clon limpio) pasaron el gate original y solo salieron a la luz en un arranque real. El registro de la primera ronda vive en [`docs/work/push-notifications/05-post-verify-fix.md`](docs/work/push-notifications/05-post-verify-fix.md); la corrección de la segunda fue ampliar el gate mismo — `expo install --check` ahora corre en `pnpm verify` y en CI (`.github/workflows/ci.yml`), y los paquetes que derivaban están fijados vía `pnpm.overrides`.
 
 `.claude/agents/` contiene un subagente por fase (researcher, planner, implementer, verifier); `.claude/commands/` contiene el orquestador (`/aidlc-run`) y comandos por fase para toma de control manual. El pipeline corre bajo una "política de gate" configurable — full-control (un humano aprueba cada fase), balanced (checkpoint solo en PLAN), o full-auto — pero dos paradas duras aplican sin importar el modo: la ambigüedad siempre escala a un humano en vez de adivinarse, y una verificación fallida siempre regresa al ciclo en vez de marcarse como terminada.
 
@@ -122,6 +122,21 @@ pnpm exec expo start -c
 ```
 
 El backend debe estar corriendo primero — la app resuelve la API a través de `EXPO_PUBLIC_API_BASE_URL`, que apunta a `http://localhost:3000` arriba. `-c` limpia el caché de Metro; puedes omitirlo para un arranque más rápido una vez que todo esté estable.
+
+**Emulador Android:** `localhost` dentro del emulador se refiere al emulador mismo, no a tu máquina, así que la app no alcanzará el backend con el valor por defecto. Elige una opción:
+
+```bash
+# Opción A — reenviar el puerto hacia el emulador (mantiene localhost en .env)
+adb reverse tcp:3000 tcp:3000
+
+# Opción B — usar el alias del emulador para la máquina host en app/.env
+EXPO_PUBLIC_API_BASE_URL=http://10.0.2.2:3000
+
+# Opción C — usar la IP LAN de tu máquina (también funciona en dispositivos físicos)
+EXPO_PUBLIC_API_BASE_URL=http://<tu-ip-lan>:3000
+```
+
+El iOS Simulator comparte el stack de red del host, así que `localhost` funciona ahí tal cual. Después de cambiar `app/.env`, reinicia Metro con `-c` — los valores de entorno se incrustan al momento de generar el bundle, no se leen en vivo.
 
 **Debe correrse desde `app/`, no desde la raíz del repo.** `expo` es solo una dependencia del workspace `app`. Correr `pnpm exec expo start` desde la raíz del repo falla con `ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL — Command "expo" not found`, porque pnpm trata un `exec` a nivel raíz como recursivo sobre todos los workspaces y falla en el primero que no tenga `expo` instalado. Si no quieres hacer `cd`, corre `pnpm --filter ./app exec expo start -c` desde la raíz.
 

@@ -32,6 +32,7 @@ function JobCardBase({ job, onPress }: JobCardProps) {
       shadow="sm"
       onPress={onPress}
       accessibilityLabel={`${job.title}, ${job.company}`}
+      accessibilityHint="Abre el detalle de la vacante"
       style={{ marginBottom: theme.spacing[3], gap: theme.spacing[2] }}
     >
       <Text

@@ -1,0 +1,1856 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`core/components snapshots (A4 snapshot policy) ActivityList — populated row with remove action 1`] = `
+<RCTScrollView
+  contentContainerStyle={
+    {
+      "paddingBottom": 24,
+      "paddingHorizontal": 20,
+    }
+  }
+  data={
+    [
+      {
+        "id": "job-1",
+        "job": {
+          "city": "Ciudad de México",
+          "company": "OCC",
+          "description": "Desarrollo de la app móvil.",
+          "id": "job-1",
+          "publishedAt": "2026-07-01T12:00:00.000Z",
+          "salary": 45000,
+          "tags": [
+            "react-native",
+            "typescript",
+            "remoto",
+          ],
+          "title": "React Native Developer",
+        },
+      },
+    ]
+  }
+  getItem={[Function]}
+  getItemCount={[Function]}
+  keyExtractor={[Function]}
+  onContentSizeChange={[Function]}
+  onLayout={[Function]}
+  onMomentumScrollBegin={[Function]}
+  onMomentumScrollEnd={[Function]}
+  onScroll={[Function]}
+  onScrollBeginDrag={[Function]}
+  onScrollEndDrag={[Function]}
+  removeClippedSubviews={false}
+  renderItem={[Function]}
+  scrollEventThrottle={0.0001}
+  stickyHeaderIndices={[]}
+  viewabilityConfigCallbackPairs={[]}
+>
+  <View>
+    <View
+      onFocusCapture={[Function]}
+      onLayout={[Function]}
+      style={null}
+    >
+      <View
+        style={
+          {
+            "gap": 8,
+            "marginBottom": 12,
+          }
+        }
+      >
+        <View
+          accessibilityHint="Abre el detalle de la vacante"
+          accessibilityLabel="React Native Developer, OCC"
+          accessibilityRole="button"
+          accessibilityState={
+            {
+              "busy": undefined,
+              "checked": undefined,
+              "disabled": undefined,
+              "expanded": undefined,
+              "selected": undefined,
+            }
+          }
+          accessibilityValue={
+            {
+              "max": undefined,
+              "min": undefined,
+              "now": undefined,
+              "text": undefined,
+            }
+          }
+          accessible={true}
+          collapsable={false}
+          focusable={true}
+          onBlur={[Function]}
+          onClick={[Function]}
+          onFocus={[Function]}
+          onResponderGrant={[Function]}
+          onResponderMove={[Function]}
+          onResponderRelease={[Function]}
+          onResponderTerminate={[Function]}
+          onResponderTerminationRequest={[Function]}
+          onStartShouldSetResponder={[Function]}
+        >
+          <View
+            style={
+              [
+                {
+                  "backgroundColor": "#FFFFFF",
+                  "borderColor": "#DDDDE6",
+                  "borderRadius": 14,
+                  "borderWidth": 1,
+                  "padding": 20,
+                },
+                {
+                  "elevation": 3,
+                  "shadowColor": "#000000",
+                  "shadowOffset": {
+                    "height": 3,
+                    "width": 3,
+                  },
+                  "shadowOpacity": 1,
+                  "shadowRadius": 0,
+                },
+                {
+                  "gap": 8,
+                  "marginBottom": 12,
+                },
+              ]
+            }
+          >
+            <Text
+              style={
+                {
+                  "color": "#08080C",
+                  "fontFamily": "Inter_400Regular",
+                  "fontSize": 16,
+                  "fontWeight": "600",
+                }
+              }
+            >
+              React Native Developer
+            </Text>
+            <Text
+              style={
+                {
+                  "color": "#55556A",
+                  "fontFamily": "Inter_400Regular",
+                  "fontSize": 14,
+                }
+              }
+            >
+              OCC
+               · 
+              Ciudad de México
+            </Text>
+            <Text
+              style={
+                {
+                  "color": "#2E2E3E",
+                  "fontFamily": "JetBrainsMono_500Medium",
+                  "fontSize": 14,
+                }
+              }
+            >
+              $45,000
+            </Text>
+            <View
+              style={
+                {
+                  "flexDirection": "row",
+                  "flexWrap": "wrap",
+                  "gap": 8,
+                }
+              }
+            >
+              <View
+                style={
+                  {
+                    "alignSelf": "flex-start",
+                    "backgroundColor": "rgba(244, 244, 248, 0.72)",
+                    "borderColor": "rgba(0, 0, 0, 0.06)",
+                    "borderRadius": 2,
+                    "borderWidth": 1,
+                    "paddingHorizontal": 10,
+                    "paddingVertical": 4,
+                  }
+                }
+              >
+                <Text
+                  style={
+                    {
+                      "color": "#08080C",
+                      "fontFamily": "Inter_700Bold",
+                      "fontSize": 11,
+                      "fontWeight": "700",
+                      "letterSpacing": 1.76,
+                      "textTransform": "uppercase",
+                    }
+                  }
+                >
+                  react-native
+                </Text>
+              </View>
+              <View
+                style={
+                  {
+                    "alignSelf": "flex-start",
+                    "backgroundColor": "rgba(244, 244, 248, 0.72)",
+                    "borderColor": "rgba(0, 0, 0, 0.06)",
+                    "borderRadius": 2,
+                    "borderWidth": 1,
+                    "paddingHorizontal": 10,
+                    "paddingVertical": 4,
+                  }
+                }
+              >
+                <Text
+                  style={
+                    {
+                      "color": "#08080C",
+                      "fontFamily": "Inter_700Bold",
+                      "fontSize": 11,
+                      "fontWeight": "700",
+                      "letterSpacing": 1.76,
+                      "textTransform": "uppercase",
+                    }
+                  }
+                >
+                  typescript
+                </Text>
+              </View>
+              <View
+                style={
+                  {
+                    "alignSelf": "flex-start",
+                    "backgroundColor": "rgba(244, 244, 248, 0.72)",
+                    "borderColor": "rgba(0, 0, 0, 0.06)",
+                    "borderRadius": 2,
+                    "borderWidth": 1,
+                    "paddingHorizontal": 10,
+                    "paddingVertical": 4,
+                  }
+                }
+              >
+                <Text
+                  style={
+                    {
+                      "color": "#08080C",
+                      "fontFamily": "Inter_700Bold",
+                      "fontSize": 11,
+                      "fontWeight": "700",
+                      "letterSpacing": 1.76,
+                      "textTransform": "uppercase",
+                    }
+                  }
+                >
+                  remoto
+                </Text>
+              </View>
+            </View>
+          </View>
+        </View>
+        <View
+          style={
+            [
+              {
+                "shadowOpacity": 1,
+                "transform": [
+                  {
+                    "translateX": 0,
+                  },
+                  {
+                    "translateY": 0,
+                  },
+                ],
+              },
+              {
+                "elevation": 6,
+                "shadowColor": "#000000",
+                "shadowOffset": {
+                  "height": 3,
+                  "width": 3,
+                },
+                "shadowRadius": 0,
+              },
+              false,
+            ]
+          }
+        >
+          <View
+            accessibilityHint="Se elimina de esta lista de inmediato"
+            accessibilityLabel="Cancelar React Native Developer"
+            accessibilityRole="button"
+            accessibilityState={
+              {
+                "busy": undefined,
+                "checked": undefined,
+                "disabled": false,
+                "expanded": undefined,
+                "selected": undefined,
+              }
+            }
+            accessibilityValue={
+              {
+                "max": undefined,
+                "min": undefined,
+                "now": undefined,
+                "text": undefined,
+              }
+            }
+            accessible={true}
+            collapsable={false}
+            focusable={true}
+            onBlur={[Function]}
+            onClick={[Function]}
+            onFocus={[Function]}
+            onResponderGrant={[Function]}
+            onResponderMove={[Function]}
+            onResponderRelease={[Function]}
+            onResponderTerminate={[Function]}
+            onResponderTerminationRequest={[Function]}
+            onStartShouldSetResponder={[Function]}
+            style={
+              [
+                {
+                  "alignItems": "center",
+                  "flexDirection": "row",
+                  "justifyContent": "center",
+                },
+                {
+                  "backgroundColor": "#7A1020",
+                  "borderColor": "#000000",
+                  "borderRadius": 8,
+                  "borderWidth": 1.5,
+                  "height": 36,
+                  "opacity": 1,
+                  "paddingHorizontal": 14,
+                },
+                false,
+              ]
+            }
+          >
+            <View
+              style={
+                {
+                  "alignItems": "center",
+                  "flexDirection": "row",
+                  "gap": 8,
+                }
+              }
+            >
+              <Text
+                style={
+                  {
+                    "color": "#F4F4F8",
+                    "fontFamily": "Inter_600SemiBold",
+                    "fontSize": 12,
+                    "fontWeight": "600",
+                    "letterSpacing": 0.52,
+                    "textTransform": "uppercase",
+                  }
+                }
+              >
+                Cancelar
+              </Text>
+            </View>
+          </View>
+        </View>
+      </View>
+    </View>
+  </View>
+</RCTScrollView>
+`;
+
+exports[`core/components snapshots (A4 snapshot policy) Avatar — image variant 1`] = `
+<ViewManagerAdapter_ExpoImage
+  accessibilityIgnoresInvertColors={true}
+  borderRadius={9999}
+  containerViewRef={"[React.ref]"}
+  contentFit="cover"
+  contentPosition={
+    {
+      "left": "50%",
+      "top": "50%",
+    }
+  }
+  height={44}
+  nativeViewRef={"[React.ref]"}
+  onError={[Function]}
+  onLoad={[Function]}
+  onLoadStart={[Function]}
+  onProgress={[Function]}
+  placeholder={[]}
+  source={
+    [
+      {
+        "uri": "https://example.com/logo.png",
+      },
+    ]
+  }
+  style={
+    {
+      "borderRadius": 9999,
+      "height": 44,
+      "width": 44,
+    }
+  }
+  transition={
+    {
+      "duration": 150,
+    }
+  }
+  width={44}
+/>
+`;
+
+exports[`core/components snapshots (A4 snapshot policy) Avatar — initials fallback variant 1`] = `
+<View
+  style={
+    {
+      "alignItems": "center",
+      "backgroundColor": "#E8E8F0",
+      "borderColor": "#DDDDE6",
+      "borderRadius": 9999,
+      "borderWidth": 1,
+      "height": 44,
+      "justifyContent": "center",
+      "width": 44,
+    }
+  }
+>
+  <Text
+    style={
+      {
+        "color": "#55556A",
+        "fontFamily": "Inter_600SemiBold",
+        "fontSize": 15.84,
+      }
+    }
+  >
+    OC
+  </Text>
+</View>
+`;
+
+exports[`core/components snapshots (A4 snapshot policy) Badge — default (ink) variant 1`] = `
+<View
+  style={
+    {
+      "alignSelf": "flex-start",
+      "backgroundColor": "rgba(244, 244, 248, 0.72)",
+      "borderColor": "rgba(0, 0, 0, 0.06)",
+      "borderRadius": 2,
+      "borderWidth": 1,
+      "paddingHorizontal": 10,
+      "paddingVertical": 4,
+    }
+  }
+>
+  <Text
+    style={
+      {
+        "color": "#08080C",
+        "fontFamily": "Inter_700Bold",
+        "fontSize": 11,
+        "fontWeight": "700",
+        "letterSpacing": 1.76,
+        "textTransform": "uppercase",
+      }
+    }
+  >
+    remoto
+  </Text>
+</View>
+`;
+
+exports[`core/components snapshots (A4 snapshot policy) Badge — leaf variant (success chips) 1`] = `
+<View
+  style={
+    {
+      "alignSelf": "flex-start",
+      "backgroundColor": "#20D987",
+      "borderColor": "#000000",
+      "borderRadius": 2,
+      "borderWidth": 1,
+      "paddingHorizontal": 10,
+      "paddingVertical": 4,
+    }
+  }
+>
+  <Text
+    style={
+      {
+        "color": "#08080C",
+        "fontFamily": "Inter_700Bold",
+        "fontSize": 11,
+        "fontWeight": "700",
+        "letterSpacing": 1.76,
+        "textTransform": "uppercase",
+      }
+    }
+  >
+    Agregado a favoritos
+  </Text>
+</View>
+`;
+
+exports[`core/components snapshots (A4 snapshot policy) Button — danger sm loading 1`] = `
+<View
+  style={
+    [
+      {
+        "shadowOpacity": 1,
+        "transform": [
+          {
+            "translateX": 0,
+          },
+          {
+            "translateY": 0,
+          },
+        ],
+      },
+      {
+        "elevation": 6,
+        "shadowColor": "#000000",
+        "shadowOffset": {
+          "height": 3,
+          "width": 3,
+        },
+        "shadowRadius": 0,
+      },
+      false,
+    ]
+  }
+>
+  <View
+    accessibilityRole="button"
+    accessibilityState={
+      {
+        "busy": undefined,
+        "checked": undefined,
+        "disabled": true,
+        "expanded": undefined,
+        "selected": undefined,
+      }
+    }
+    accessibilityValue={
+      {
+        "max": undefined,
+        "min": undefined,
+        "now": undefined,
+        "text": undefined,
+      }
+    }
+    accessible={true}
+    collapsable={false}
+    focusable={true}
+    onBlur={[Function]}
+    onClick={[Function]}
+    onFocus={[Function]}
+    onResponderGrant={[Function]}
+    onResponderMove={[Function]}
+    onResponderRelease={[Function]}
+    onResponderTerminate={[Function]}
+    onResponderTerminationRequest={[Function]}
+    onStartShouldSetResponder={[Function]}
+    style={
+      [
+        {
+          "alignItems": "center",
+          "flexDirection": "row",
+          "justifyContent": "center",
+        },
+        {
+          "backgroundColor": "#7A1020",
+          "borderColor": "#000000",
+          "borderRadius": 8,
+          "borderWidth": 1.5,
+          "height": 36,
+          "opacity": 1,
+          "paddingHorizontal": 14,
+        },
+        false,
+      ]
+    }
+  >
+    <ActivityIndicator
+      color="#F4F4F8"
+      size="small"
+    />
+  </View>
+</View>
+`;
+
+exports[`core/components snapshots (A4 snapshot policy) Button — primary md 1`] = `
+<View
+  style={
+    [
+      {
+        "shadowOpacity": 1,
+        "transform": [
+          {
+            "translateX": 0,
+          },
+          {
+            "translateY": 0,
+          },
+        ],
+      },
+      {
+        "elevation": 6,
+        "shadowColor": "#000000",
+        "shadowOffset": {
+          "height": 6,
+          "width": 6,
+        },
+        "shadowRadius": 0,
+      },
+      false,
+    ]
+  }
+>
+  <View
+    accessibilityRole="button"
+    accessibilityState={
+      {
+        "busy": undefined,
+        "checked": undefined,
+        "disabled": false,
+        "expanded": undefined,
+        "selected": undefined,
+      }
+    }
+    accessibilityValue={
+      {
+        "max": undefined,
+        "min": undefined,
+        "now": undefined,
+        "text": undefined,
+      }
+    }
+    accessible={true}
+    collapsable={false}
+    focusable={true}
+    onBlur={[Function]}
+    onClick={[Function]}
+    onFocus={[Function]}
+    onResponderGrant={[Function]}
+    onResponderMove={[Function]}
+    onResponderRelease={[Function]}
+    onResponderTerminate={[Function]}
+    onResponderTerminationRequest={[Function]}
+    onStartShouldSetResponder={[Function]}
+    style={
+      [
+        {
+          "alignItems": "center",
+          "flexDirection": "row",
+          "justifyContent": "center",
+        },
+        {
+          "backgroundColor": "#08080C",
+          "borderColor": "#000000",
+          "borderRadius": 8,
+          "borderWidth": 1.5,
+          "height": 48,
+          "opacity": 1,
+          "paddingHorizontal": 20,
+        },
+        false,
+      ]
+    }
+  >
+    <View
+      style={
+        {
+          "alignItems": "center",
+          "flexDirection": "row",
+          "gap": 8,
+        }
+      }
+    >
+      <Text
+        style={
+          {
+            "color": "#C6FF2E",
+            "fontFamily": "Inter_600SemiBold",
+            "fontSize": 13,
+            "fontWeight": "600",
+            "letterSpacing": 0.52,
+            "textTransform": "uppercase",
+          }
+        }
+      >
+        Aplicar
+      </Text>
+    </View>
+  </View>
+</View>
+`;
+
+exports[`core/components snapshots (A4 snapshot policy) Button — secondary disabled 1`] = `
+<View
+  style={
+    [
+      {
+        "shadowOpacity": 1,
+        "transform": [
+          {
+            "translateX": 0,
+          },
+          {
+            "translateY": 0,
+          },
+        ],
+      },
+      false,
+      false,
+    ]
+  }
+>
+  <View
+    accessibilityRole="button"
+    accessibilityState={
+      {
+        "busy": undefined,
+        "checked": undefined,
+        "disabled": true,
+        "expanded": undefined,
+        "selected": undefined,
+      }
+    }
+    accessibilityValue={
+      {
+        "max": undefined,
+        "min": undefined,
+        "now": undefined,
+        "text": undefined,
+      }
+    }
+    accessible={true}
+    collapsable={false}
+    focusable={true}
+    onBlur={[Function]}
+    onClick={[Function]}
+    onFocus={[Function]}
+    onResponderGrant={[Function]}
+    onResponderMove={[Function]}
+    onResponderRelease={[Function]}
+    onResponderTerminate={[Function]}
+    onResponderTerminationRequest={[Function]}
+    onStartShouldSetResponder={[Function]}
+    style={
+      [
+        {
+          "alignItems": "center",
+          "flexDirection": "row",
+          "justifyContent": "center",
+        },
+        {
+          "backgroundColor": "transparent",
+          "borderColor": "#B8B8CB",
+          "borderRadius": 8,
+          "borderWidth": 1,
+          "height": 48,
+          "opacity": 0.5,
+          "paddingHorizontal": 20,
+        },
+        false,
+      ]
+    }
+  >
+    <View
+      style={
+        {
+          "alignItems": "center",
+          "flexDirection": "row",
+          "gap": 8,
+        }
+      }
+    >
+      <Text
+        style={
+          {
+            "color": "#08080C",
+            "fontFamily": "Inter_600SemiBold",
+            "fontSize": 13,
+            "fontWeight": "600",
+            "letterSpacing": 0.52,
+            "textTransform": "uppercase",
+          }
+        }
+      >
+        Ya aplicaste
+      </Text>
+    </View>
+  </View>
+</View>
+`;
+
+exports[`core/components snapshots (A4 snapshot policy) Card — pressable with a11y label/hint 1`] = `
+<View
+  accessibilityHint="Abre el detalle"
+  accessibilityLabel="Tarjeta"
+  accessibilityRole="button"
+  accessibilityState={
+    {
+      "busy": undefined,
+      "checked": undefined,
+      "disabled": undefined,
+      "expanded": undefined,
+      "selected": undefined,
+    }
+  }
+  accessibilityValue={
+    {
+      "max": undefined,
+      "min": undefined,
+      "now": undefined,
+      "text": undefined,
+    }
+  }
+  accessible={true}
+  collapsable={false}
+  focusable={true}
+  onBlur={[Function]}
+  onClick={[Function]}
+  onFocus={[Function]}
+  onResponderGrant={[Function]}
+  onResponderMove={[Function]}
+  onResponderRelease={[Function]}
+  onResponderTerminate={[Function]}
+  onResponderTerminationRequest={[Function]}
+  onStartShouldSetResponder={[Function]}
+>
+  <View
+    style={
+      [
+        {
+          "backgroundColor": "#FFFFFF",
+          "borderColor": "#DDDDE6",
+          "borderRadius": 14,
+          "borderWidth": 1,
+          "padding": 20,
+        },
+        {
+          "elevation": 6,
+          "shadowColor": "#000000",
+          "shadowOffset": {
+            "height": 6,
+            "width": 6,
+          },
+          "shadowOpacity": 1,
+          "shadowRadius": 0,
+        },
+        undefined,
+      ]
+    }
+  >
+    <Text>
+      Contenido
+    </Text>
+  </View>
+</View>
+`;
+
+exports[`core/components snapshots (A4 snapshot policy) Card — static 1`] = `
+<View
+  style={
+    [
+      {
+        "backgroundColor": "#FFFFFF",
+        "borderColor": "#DDDDE6",
+        "borderRadius": 14,
+        "borderWidth": 1,
+        "padding": 20,
+      },
+      {
+        "elevation": 6,
+        "shadowColor": "#000000",
+        "shadowOffset": {
+          "height": 6,
+          "width": 6,
+        },
+        "shadowOpacity": 1,
+        "shadowRadius": 0,
+      },
+      undefined,
+    ]
+  }
+>
+  <Text>
+    Contenido
+  </Text>
+</View>
+`;
+
+exports[`core/components snapshots (A4 snapshot policy) EmptyState — with description and action 1`] = `
+<View
+  style={
+    {
+      "alignItems": "center",
+      "gap": 8,
+      "justifyContent": "center",
+      "padding": 32,
+    }
+  }
+>
+  <Text
+    style={
+      {
+        "color": "#08080C",
+        "fontFamily": "Inter_600SemiBold",
+        "fontSize": 18,
+        "fontWeight": "600",
+        "textAlign": "center",
+      }
+    }
+  >
+    Sin resultados
+  </Text>
+  <Text
+    style={
+      {
+        "color": "#55556A",
+        "fontFamily": "Inter_400Regular",
+        "fontSize": 14,
+        "textAlign": "center",
+      }
+    }
+  >
+    Intenta ajustar tu búsqueda.
+  </Text>
+  <View
+    style={
+      {
+        "marginTop": 12,
+      }
+    }
+  >
+    <View
+      style={
+        [
+          {
+            "shadowOpacity": 1,
+            "transform": [
+              {
+                "translateX": 0,
+              },
+              {
+                "translateY": 0,
+              },
+            ],
+          },
+          false,
+          false,
+        ]
+      }
+    >
+      <View
+        accessibilityRole="button"
+        accessibilityState={
+          {
+            "busy": undefined,
+            "checked": undefined,
+            "disabled": false,
+            "expanded": undefined,
+            "selected": undefined,
+          }
+        }
+        accessibilityValue={
+          {
+            "max": undefined,
+            "min": undefined,
+            "now": undefined,
+            "text": undefined,
+          }
+        }
+        accessible={true}
+        collapsable={false}
+        focusable={true}
+        onBlur={[Function]}
+        onClick={[Function]}
+        onFocus={[Function]}
+        onResponderGrant={[Function]}
+        onResponderMove={[Function]}
+        onResponderRelease={[Function]}
+        onResponderTerminate={[Function]}
+        onResponderTerminationRequest={[Function]}
+        onStartShouldSetResponder={[Function]}
+        style={
+          [
+            {
+              "alignItems": "center",
+              "flexDirection": "row",
+              "justifyContent": "center",
+            },
+            {
+              "backgroundColor": "transparent",
+              "borderColor": "#B8B8CB",
+              "borderRadius": 8,
+              "borderWidth": 1,
+              "height": 36,
+              "opacity": 1,
+              "paddingHorizontal": 14,
+            },
+            false,
+          ]
+        }
+      >
+        <View
+          style={
+            {
+              "alignItems": "center",
+              "flexDirection": "row",
+              "gap": 8,
+            }
+          }
+        >
+          <Text
+            style={
+              {
+                "color": "#08080C",
+                "fontFamily": "Inter_600SemiBold",
+                "fontSize": 12,
+                "fontWeight": "600",
+                "letterSpacing": 0.52,
+                "textTransform": "uppercase",
+              }
+            }
+          >
+            Reintentar
+          </Text>
+        </View>
+      </View>
+    </View>
+  </View>
+</View>
+`;
+
+exports[`core/components snapshots (A4 snapshot policy) ErrorState — default message 1`] = `
+<View
+  style={
+    {
+      "alignItems": "center",
+      "gap": 8,
+      "justifyContent": "center",
+      "padding": 32,
+    }
+  }
+>
+  <Text
+    style={
+      {
+        "color": "#08080C",
+        "fontFamily": "Inter_600SemiBold",
+        "fontSize": 18,
+        "fontWeight": "600",
+        "textAlign": "center",
+      }
+    }
+  >
+    No se pudo cargar la información
+  </Text>
+  <Text
+    style={
+      {
+        "color": "#55556A",
+        "fontFamily": "Inter_400Regular",
+        "fontSize": 14,
+        "textAlign": "center",
+      }
+    }
+  >
+    Algo salió mal. Intenta de nuevo.
+  </Text>
+  <View
+    style={
+      {
+        "marginTop": 12,
+      }
+    }
+  >
+    <View
+      style={
+        [
+          {
+            "shadowOpacity": 1,
+            "transform": [
+              {
+                "translateX": 0,
+              },
+              {
+                "translateY": 0,
+              },
+            ],
+          },
+          false,
+          false,
+        ]
+      }
+    >
+      <View
+        accessibilityRole="button"
+        accessibilityState={
+          {
+            "busy": undefined,
+            "checked": undefined,
+            "disabled": false,
+            "expanded": undefined,
+            "selected": undefined,
+          }
+        }
+        accessibilityValue={
+          {
+            "max": undefined,
+            "min": undefined,
+            "now": undefined,
+            "text": undefined,
+          }
+        }
+        accessible={true}
+        collapsable={false}
+        focusable={true}
+        onBlur={[Function]}
+        onClick={[Function]}
+        onFocus={[Function]}
+        onResponderGrant={[Function]}
+        onResponderMove={[Function]}
+        onResponderRelease={[Function]}
+        onResponderTerminate={[Function]}
+        onResponderTerminationRequest={[Function]}
+        onStartShouldSetResponder={[Function]}
+        style={
+          [
+            {
+              "alignItems": "center",
+              "flexDirection": "row",
+              "justifyContent": "center",
+            },
+            {
+              "backgroundColor": "transparent",
+              "borderColor": "#B8B8CB",
+              "borderRadius": 8,
+              "borderWidth": 1,
+              "height": 36,
+              "opacity": 1,
+              "paddingHorizontal": 14,
+            },
+            false,
+          ]
+        }
+      >
+        <View
+          style={
+            {
+              "alignItems": "center",
+              "flexDirection": "row",
+              "gap": 8,
+            }
+          }
+        >
+          <Text
+            style={
+              {
+                "color": "#08080C",
+                "fontFamily": "Inter_600SemiBold",
+                "fontSize": 12,
+                "fontWeight": "600",
+                "letterSpacing": 0.52,
+                "textTransform": "uppercase",
+              }
+            }
+          >
+            Reintentar
+          </Text>
+        </View>
+      </View>
+    </View>
+  </View>
+</View>
+`;
+
+exports[`core/components snapshots (A4 snapshot policy) Input — error state 1`] = `
+<View>
+  <Text
+    style={
+      {
+        "color": "#55556A",
+        "fontFamily": "Inter_700Bold",
+        "fontSize": 11,
+        "fontWeight": "700",
+        "letterSpacing": 1.76,
+        "marginBottom": 8,
+        "textTransform": "uppercase",
+      }
+    }
+  >
+    Password
+  </Text>
+  <TextInput
+    accessibilityLabel="Password"
+    onBlur={[Function]}
+    onFocus={[Function]}
+    placeholderTextColor="#6E6E8A"
+    style={
+      [
+        {
+          "backgroundColor": "#E8E8F0",
+          "borderColor": "#7A1020",
+          "borderRadius": 8,
+          "borderWidth": 1,
+          "color": "#08080C",
+          "fontFamily": "Inter_400Regular",
+          "fontSize": 16,
+          "height": 48,
+          "paddingHorizontal": 16,
+        },
+        undefined,
+      ]
+    }
+  />
+  <Text
+    style={
+      {
+        "color": "#7A1020",
+        "fontFamily": "Inter_400Regular",
+        "fontSize": 12,
+        "marginTop": 8,
+      }
+    }
+  >
+    Campo requerido
+  </Text>
+</View>
+`;
+
+exports[`core/components snapshots (A4 snapshot policy) Input — label, placeholder and hint 1`] = `
+<View>
+  <Text
+    style={
+      {
+        "color": "#55556A",
+        "fontFamily": "Inter_700Bold",
+        "fontSize": 11,
+        "fontWeight": "700",
+        "letterSpacing": 1.76,
+        "marginBottom": 8,
+        "textTransform": "uppercase",
+      }
+    }
+  >
+    Email
+  </Text>
+  <TextInput
+    accessibilityHint="Usa tu correo corporativo"
+    accessibilityLabel="Email"
+    onBlur={[Function]}
+    onFocus={[Function]}
+    placeholder="tu@correo.com"
+    placeholderTextColor="#6E6E8A"
+    style={
+      [
+        {
+          "backgroundColor": "#E8E8F0",
+          "borderColor": "#B8B8CB",
+          "borderRadius": 8,
+          "borderWidth": 1,
+          "color": "#08080C",
+          "fontFamily": "Inter_400Regular",
+          "fontSize": 16,
+          "height": 48,
+          "paddingHorizontal": 16,
+        },
+        undefined,
+      ]
+    }
+  />
+  <Text
+    style={
+      {
+        "color": "#6E6E8A",
+        "fontFamily": "Inter_400Regular",
+        "fontSize": 12,
+        "marginTop": 8,
+      }
+    }
+  >
+    Usa tu correo corporativo
+  </Text>
+</View>
+`;
+
+exports[`core/components snapshots (A4 snapshot policy) JobCard — full job with salary and tags 1`] = `
+<View
+  accessibilityHint="Abre el detalle de la vacante"
+  accessibilityLabel="React Native Developer, OCC"
+  accessibilityRole="button"
+  accessibilityState={
+    {
+      "busy": undefined,
+      "checked": undefined,
+      "disabled": undefined,
+      "expanded": undefined,
+      "selected": undefined,
+    }
+  }
+  accessibilityValue={
+    {
+      "max": undefined,
+      "min": undefined,
+      "now": undefined,
+      "text": undefined,
+    }
+  }
+  accessible={true}
+  collapsable={false}
+  focusable={true}
+  onBlur={[Function]}
+  onClick={[Function]}
+  onFocus={[Function]}
+  onResponderGrant={[Function]}
+  onResponderMove={[Function]}
+  onResponderRelease={[Function]}
+  onResponderTerminate={[Function]}
+  onResponderTerminationRequest={[Function]}
+  onStartShouldSetResponder={[Function]}
+>
+  <View
+    style={
+      [
+        {
+          "backgroundColor": "#FFFFFF",
+          "borderColor": "#DDDDE6",
+          "borderRadius": 14,
+          "borderWidth": 1,
+          "padding": 20,
+        },
+        {
+          "elevation": 3,
+          "shadowColor": "#000000",
+          "shadowOffset": {
+            "height": 3,
+            "width": 3,
+          },
+          "shadowOpacity": 1,
+          "shadowRadius": 0,
+        },
+        {
+          "gap": 8,
+          "marginBottom": 12,
+        },
+      ]
+    }
+  >
+    <Text
+      style={
+        {
+          "color": "#08080C",
+          "fontFamily": "Inter_400Regular",
+          "fontSize": 16,
+          "fontWeight": "600",
+        }
+      }
+    >
+      React Native Developer
+    </Text>
+    <Text
+      style={
+        {
+          "color": "#55556A",
+          "fontFamily": "Inter_400Regular",
+          "fontSize": 14,
+        }
+      }
+    >
+      OCC
+       · 
+      Ciudad de México
+    </Text>
+    <Text
+      style={
+        {
+          "color": "#2E2E3E",
+          "fontFamily": "JetBrainsMono_500Medium",
+          "fontSize": 14,
+        }
+      }
+    >
+      $45,000
+    </Text>
+    <View
+      style={
+        {
+          "flexDirection": "row",
+          "flexWrap": "wrap",
+          "gap": 8,
+        }
+      }
+    >
+      <View
+        style={
+          {
+            "alignSelf": "flex-start",
+            "backgroundColor": "rgba(244, 244, 248, 0.72)",
+            "borderColor": "rgba(0, 0, 0, 0.06)",
+            "borderRadius": 2,
+            "borderWidth": 1,
+            "paddingHorizontal": 10,
+            "paddingVertical": 4,
+          }
+        }
+      >
+        <Text
+          style={
+            {
+              "color": "#08080C",
+              "fontFamily": "Inter_700Bold",
+              "fontSize": 11,
+              "fontWeight": "700",
+              "letterSpacing": 1.76,
+              "textTransform": "uppercase",
+            }
+          }
+        >
+          react-native
+        </Text>
+      </View>
+      <View
+        style={
+          {
+            "alignSelf": "flex-start",
+            "backgroundColor": "rgba(244, 244, 248, 0.72)",
+            "borderColor": "rgba(0, 0, 0, 0.06)",
+            "borderRadius": 2,
+            "borderWidth": 1,
+            "paddingHorizontal": 10,
+            "paddingVertical": 4,
+          }
+        }
+      >
+        <Text
+          style={
+            {
+              "color": "#08080C",
+              "fontFamily": "Inter_700Bold",
+              "fontSize": 11,
+              "fontWeight": "700",
+              "letterSpacing": 1.76,
+              "textTransform": "uppercase",
+            }
+          }
+        >
+          typescript
+        </Text>
+      </View>
+      <View
+        style={
+          {
+            "alignSelf": "flex-start",
+            "backgroundColor": "rgba(244, 244, 248, 0.72)",
+            "borderColor": "rgba(0, 0, 0, 0.06)",
+            "borderRadius": 2,
+            "borderWidth": 1,
+            "paddingHorizontal": 10,
+            "paddingVertical": 4,
+          }
+        }
+      >
+        <Text
+          style={
+            {
+              "color": "#08080C",
+              "fontFamily": "Inter_700Bold",
+              "fontSize": 11,
+              "fontWeight": "700",
+              "letterSpacing": 1.76,
+              "textTransform": "uppercase",
+            }
+          }
+        >
+          remoto
+        </Text>
+      </View>
+    </View>
+  </View>
+</View>
+`;
+
+exports[`core/components snapshots (A4 snapshot policy) JobCard — job without salary 1`] = `
+<View
+  accessibilityHint="Abre el detalle de la vacante"
+  accessibilityLabel="React Native Developer, OCC"
+  accessibilityRole="button"
+  accessibilityState={
+    {
+      "busy": undefined,
+      "checked": undefined,
+      "disabled": undefined,
+      "expanded": undefined,
+      "selected": undefined,
+    }
+  }
+  accessibilityValue={
+    {
+      "max": undefined,
+      "min": undefined,
+      "now": undefined,
+      "text": undefined,
+    }
+  }
+  accessible={true}
+  collapsable={false}
+  focusable={true}
+  onBlur={[Function]}
+  onClick={[Function]}
+  onFocus={[Function]}
+  onResponderGrant={[Function]}
+  onResponderMove={[Function]}
+  onResponderRelease={[Function]}
+  onResponderTerminate={[Function]}
+  onResponderTerminationRequest={[Function]}
+  onStartShouldSetResponder={[Function]}
+>
+  <View
+    style={
+      [
+        {
+          "backgroundColor": "#FFFFFF",
+          "borderColor": "#DDDDE6",
+          "borderRadius": 14,
+          "borderWidth": 1,
+          "padding": 20,
+        },
+        {
+          "elevation": 3,
+          "shadowColor": "#000000",
+          "shadowOffset": {
+            "height": 3,
+            "width": 3,
+          },
+          "shadowOpacity": 1,
+          "shadowRadius": 0,
+        },
+        {
+          "gap": 8,
+          "marginBottom": 12,
+        },
+      ]
+    }
+  >
+    <Text
+      style={
+        {
+          "color": "#08080C",
+          "fontFamily": "Inter_400Regular",
+          "fontSize": 16,
+          "fontWeight": "600",
+        }
+      }
+    >
+      React Native Developer
+    </Text>
+    <Text
+      style={
+        {
+          "color": "#55556A",
+          "fontFamily": "Inter_400Regular",
+          "fontSize": 14,
+        }
+      }
+    >
+      OCC
+       · 
+      Ciudad de México
+    </Text>
+    <View
+      style={
+        {
+          "flexDirection": "row",
+          "flexWrap": "wrap",
+          "gap": 8,
+        }
+      }
+    >
+      <View
+        style={
+          {
+            "alignSelf": "flex-start",
+            "backgroundColor": "rgba(244, 244, 248, 0.72)",
+            "borderColor": "rgba(0, 0, 0, 0.06)",
+            "borderRadius": 2,
+            "borderWidth": 1,
+            "paddingHorizontal": 10,
+            "paddingVertical": 4,
+          }
+        }
+      >
+        <Text
+          style={
+            {
+              "color": "#08080C",
+              "fontFamily": "Inter_700Bold",
+              "fontSize": 11,
+              "fontWeight": "700",
+              "letterSpacing": 1.76,
+              "textTransform": "uppercase",
+            }
+          }
+        >
+          react-native
+        </Text>
+      </View>
+      <View
+        style={
+          {
+            "alignSelf": "flex-start",
+            "backgroundColor": "rgba(244, 244, 248, 0.72)",
+            "borderColor": "rgba(0, 0, 0, 0.06)",
+            "borderRadius": 2,
+            "borderWidth": 1,
+            "paddingHorizontal": 10,
+            "paddingVertical": 4,
+          }
+        }
+      >
+        <Text
+          style={
+            {
+              "color": "#08080C",
+              "fontFamily": "Inter_700Bold",
+              "fontSize": 11,
+              "fontWeight": "700",
+              "letterSpacing": 1.76,
+              "textTransform": "uppercase",
+            }
+          }
+        >
+          typescript
+        </Text>
+      </View>
+      <View
+        style={
+          {
+            "alignSelf": "flex-start",
+            "backgroundColor": "rgba(244, 244, 248, 0.72)",
+            "borderColor": "rgba(0, 0, 0, 0.06)",
+            "borderRadius": 2,
+            "borderWidth": 1,
+            "paddingHorizontal": 10,
+            "paddingVertical": 4,
+          }
+        }
+      >
+        <Text
+          style={
+            {
+              "color": "#08080C",
+              "fontFamily": "Inter_700Bold",
+              "fontSize": 11,
+              "fontWeight": "700",
+              "letterSpacing": 1.76,
+              "textTransform": "uppercase",
+            }
+          }
+        >
+          remoto
+        </Text>
+      </View>
+    </View>
+  </View>
+</View>
+`;
+
+exports[`core/components snapshots (A4 snapshot policy) JobCardSkeleton 1`] = `
+<View
+  style={
+    [
+      {
+        "borderWidth": 1,
+        "flexDirection": "row",
+        "gap": 12,
+        "marginBottom": 12,
+        "padding": 16,
+      },
+      {
+        "backgroundColor": "#FFFFFF",
+        "borderColor": "#DDDDE6",
+        "borderRadius": 14,
+      },
+    ]
+  }
+>
+  <View
+    style={
+      [
+        {
+          "backgroundColor": "#E8E8F0",
+          "borderRadius": 9999,
+          "height": 44,
+          "width": 44,
+        },
+        {
+          "opacity": 0.4,
+        },
+        undefined,
+      ]
+    }
+  />
+  <View
+    style={
+      {
+        "flex": 1,
+        "gap": 8,
+      }
+    }
+  >
+    <View
+      style={
+        [
+          {
+            "backgroundColor": "#E8E8F0",
+            "borderRadius": 4,
+            "height": 16,
+            "width": "70%",
+          },
+          {
+            "opacity": 0.4,
+          },
+          undefined,
+        ]
+      }
+    />
+    <View
+      style={
+        [
+          {
+            "backgroundColor": "#E8E8F0",
+            "borderRadius": 4,
+            "height": 12,
+            "width": "45%",
+          },
+          {
+            "opacity": 0.4,
+          },
+          undefined,
+        ]
+      }
+    />
+    <View
+      style={
+        [
+          {
+            "backgroundColor": "#E8E8F0",
+            "borderRadius": 4,
+            "height": 12,
+            "width": "30%",
+          },
+          {
+            "opacity": 0.4,
+          },
+          undefined,
+        ]
+      }
+    />
+  </View>
+</View>
+`;
+
+exports[`core/components snapshots (A4 snapshot policy) Select — closed with selection 1`] = `
+<View>
+  <Text
+    style={
+      {
+        "color": "#55556A",
+        "fontFamily": "Inter_700Bold",
+        "fontSize": 11,
+        "fontWeight": "700",
+        "letterSpacing": 1.76,
+        "marginBottom": 8,
+        "textTransform": "uppercase",
+      }
+    }
+  >
+    Ciudad
+  </Text>
+  <View
+    accessibilityRole="button"
+    accessibilityState={
+      {
+        "busy": undefined,
+        "checked": undefined,
+        "disabled": undefined,
+        "expanded": undefined,
+        "selected": undefined,
+      }
+    }
+    accessibilityValue={
+      {
+        "max": undefined,
+        "min": undefined,
+        "now": undefined,
+        "text": undefined,
+      }
+    }
+    accessible={true}
+    collapsable={false}
+    focusable={true}
+    onBlur={[Function]}
+    onClick={[Function]}
+    onFocus={[Function]}
+    onResponderGrant={[Function]}
+    onResponderMove={[Function]}
+    onResponderRelease={[Function]}
+    onResponderTerminate={[Function]}
+    onResponderTerminationRequest={[Function]}
+    onStartShouldSetResponder={[Function]}
+    style={
+      {
+        "alignItems": "center",
+        "backgroundColor": "#E8E8F0",
+        "borderColor": "#B8B8CB",
+        "borderRadius": 8,
+        "borderWidth": 1,
+        "flexDirection": "row",
+        "height": 44,
+        "justifyContent": "space-between",
+        "paddingHorizontal": 14,
+      }
+    }
+  >
+    <Text
+      style={
+        {
+          "color": "#08080C",
+          "fontFamily": "Inter_400Regular",
+          "fontSize": 14,
+        }
+      }
+    >
+      Ciudad de México
+    </Text>
+  </View>
+</View>
+`;
+
+exports[`core/components snapshots (A4 snapshot policy) Skeleton — custom size 1`] = `
+<View
+  style={
+    [
+      {
+        "backgroundColor": "#E8E8F0",
+        "borderRadius": 4,
+        "height": 24,
+        "width": 120,
+      },
+      {
+        "opacity": 0.4,
+      },
+      undefined,
+    ]
+  }
+/>
+`;

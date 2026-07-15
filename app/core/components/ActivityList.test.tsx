@@ -1,7 +1,7 @@
 import type { Job } from '@occ/shared'
 import { fireEvent, render, screen } from '@testing-library/react-native'
 
-import { JobCardSkeleton } from '../../../../core/components'
+import { JobCardSkeleton } from './Skeleton'
 import { ActivityList, type ActivityRow } from './ActivityList'
 
 function makeJob(overrides: Partial<Job> = {}): Job {

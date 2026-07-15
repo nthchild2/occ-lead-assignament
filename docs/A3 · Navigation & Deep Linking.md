@@ -124,12 +124,11 @@ useEffect(() => {
 }, [activeJobId])
 
 const onSheetDismiss = () => {
-  // Only scroll the list if the Search tab is currently active
-  if (activeTab === 'index' && activeJobIndex !== -1) {
+  // Only scroll the list if we have a known list position (index >= 0)
+  if (activeJobIndex !== null && activeJobIndex >= 0) {
     flashListRef.current?.scrollToIndex({ index: activeJobIndex, animated: false })
   }
   clearActiveJob()
-  if (jobId) router.setParams({ jobId: undefined })
 }
 
 return (
@@ -142,7 +141,7 @@ return (
 )
 ```
 
-Job cards in `index.tsx` call `setActiveJob(job.id, index)`. Notification taps set `jobId` as a URL param, which the protected layout reads and translates into a `setActiveJob` call.
+Job cards in `index.tsx` call `setActiveJob(job.id, index)`. Notification taps and the `occ://vacante/:id` deep link funnel into the exact same call (with index `-1` — see Decision 3), so the layout has a single trigger for presenting the sheet regardless of entry point.
 
 ---
 
@@ -154,40 +153,45 @@ The spec requires that tapping a push notification opens the Job Detail sheet fo
 
 ### Decision
 
-The deep link resolves to `/(protected)/(tabs)/index?jobId=123`. The protected layout intercepts the `jobId` param, fetches the job, and opens the sheet without switching tabs:
+The deep link is implemented as a dedicated dynamic route: `occ://vacante/:id` resolves to `app/(protected)/vacante/[id].tsx`. Expo Router automatically registers file-based routes as deep-link targets — the file path `app/(protected)/vacante/[id].tsx` becomes the scheme handler `occ://vacante/:id` without additional configuration. The route renders no UI — it reads the `id` param, sets the active job, and immediately redirects to the tabs root; the protected layout's existing `activeJobId` effect (Decision 2) then presents the sheet over whatever tab is active:
 
 ```ts
-// app/(protected)/_layout.tsx
-const { jobId } = useLocalSearchParams<{ jobId?: string }>()
+// app/(protected)/vacante/[id].tsx
+export default function VacanteRoute() {
+  const { id } = useLocalSearchParams<{ id: string }>()
 
-useEffect(() => {
-  if (!jobId) return
-  jobsService.getById(jobId).then((job) => {
-    setActiveJob(job.id, -1) // index is unknown when arriving from a deep link
-  })
-}, [jobId])
+  useEffect(() => {
+    if (id) {
+      useJobsStore.getState().setActiveJob(id, -1)
+    }
+  }, [id])
+
+  return <Redirect href="/(protected)/(tabs)" />
+}
 ```
 
-`activeJobIndex` is `-1` when arriving from a deep link — the job is not in the `jobs.store` list. Swipe between jobs is disabled in this case. The sheet shows the single job detail only.
+`activeJobIndex` is `-1` when arriving this way — the job is not necessarily in the `jobs.store` list. Swipe between jobs is disabled in this case, and the sheet's content falls back to fetching the job by id (`jobsService.getById`) when it isn't in the loaded list.
 
-When the sheet closes, the `jobId` param is cleared from the URL so the sheet doesn't reopen on re-render.
+Because the route redirects immediately, no URL param lingers after the sheet opens — the "sheet reopens on re-render" hazard of a query-param approach doesn't arise.
 
 ### Notifee handler registration
 
-The Notifee event handler is registered in `(protected)/_layout.tsx` so it only fires when the user is authenticated:
+Foreground taps don't go through the router at all. `(protected)/_layout.tsx` registers the handler — so it only fires when the user is authenticated — and calls the store directly:
 
 ```ts
 // app/(protected)/_layout.tsx
-useEffect(() => {
-  return notifee.onForegroundEvent(({ type, detail }) => {
-    if (type === EventType.PRESS && detail.notification?.data?.jobId) {
-      router.setParams({ jobId: detail.notification.data.jobId })
-    }
-  })
-}, [])
+function handleForegroundPress(event: NotifeeEvent): void {
+  if (event.type !== EventType.PRESS) return
+  const jobId = event.detail.notification?.data?.jobId
+  if (typeof jobId === 'string') {
+    useJobsStore.getState().setActiveJob(jobId, -1)
+  }
+}
+
+useEffect(() => notifee.onForegroundEvent(handleForegroundPress), [])
 ```
 
-Background and quit state events are handled in `app/_layout.tsx` via `notifee.onBackgroundEvent` and `notifee.getInitialNotification`.
+Background and quit-state events are handled in `app/_layout.tsx` via `notifee.onBackgroundEvent` and `notifee.getInitialNotification` — both stash the job id in `core/lib/pendingNotification.ts` (a module-level, read-and-clear holder) instead of navigating, and Decision 4 covers when that pending id is consumed.
 
 ---
 
@@ -199,7 +203,7 @@ When the app is closed and the user taps a notification, the app launches cold. 
 
 ### Decision
 
-The hydration sequence in `(protected)/_layout.tsx` runs `GET /auth/me` before rendering any children. The `jobId` is held until hydration completes.
+The hydration sequence in `(protected)/_layout.tsx` runs `GET /auth/me` before rendering any children. The job id is held in `core/lib/pendingNotification.ts` until hydration completes.
 
 Sequence on quit state tap:
 
@@ -207,14 +211,15 @@ Sequence on quit state tap:
 App launches cold
   → app/_layout.tsx renders
   → notifee.getInitialNotification() reads the pending notification
-  → stores jobId in a ref (not navigating yet)
+  → setPendingJobId(jobId) stashes it (no navigation yet)
   → (protected)/_layout.tsx mounts
   → GET /auth/me runs
-  → if valid: render children, then set jobId param → sheet opens
-  → if invalid: logout(), navigate to login (jobId is dropped)
+  → if valid: hydration flips to 'ready' → consumePendingJobId()
+    → setActiveJob(jobId, -1) → sheet opens
+  → if invalid: clearSession() → redirect to login (pending id is dropped)
 ```
 
-The `jobId` is not passed to the router until after hydration succeeds. This prevents the sheet from opening before the session is confirmed.
+`consumePendingJobId()` is read-and-clear — it returns the held value and resets it in the same call, so the same notification can never re-open the sheet twice — and it only runs once hydration is `'ready'`, which prevents the sheet from opening before the session is confirmed.
 
 ---
 
@@ -244,10 +249,10 @@ Each tab mounts its own store (`applications.store`, `favorites.store`) independ
 When the sheet is open and the user has swiped to job at index N:
 
 1. `jobs.store.activeJobIndex` is updated on every swipe via `setActiveJob`
-2. On sheet dismiss, if the Search tab is active and `activeJobIndex !== -1`, `scrollToIndex` brings the active job into view
+2. On sheet dismiss, if the list's ref is registered and `activeJobIndex >= 0`, `scrollToIndex` brings the active job into view (best-effort, wrapped so a stale ref/index can never crash the dismiss)
 3. `clearActiveJob()` resets the store
 
-If `activeJobIndex` is `-1` (deep link entry), `scrollToIndex` is skipped.
+If `activeJobIndex` is `-1` (deep link / notification entry) or `null`, `scrollToIndex` is skipped.
 
 If the user swiped into jobs loaded from a subsequent page, `activeJobIndex` reflects the position in the full accumulated `jobs.store.jobs` array — not the position within a single page. `FlashList` receives the full array so the index is valid.
 
@@ -255,4 +260,4 @@ If the user swiped into jobs loaded from a subsequent page, `activeJobIndex` ref
 
 ## Implementation note · Quit state jobId handoff
 
-The quit state sequence stores the `jobId` in a ref in `app/_layout.tsx` before hydration completes. The protected layout reads this value after hydration succeeds. The handoff between them needs to be deliberate — a React context or a module-level variable is the cleanest option. A Zustand slice is possible but adds persistence risk: this value should never survive an app restart on its own. This needs careful attention during implementation to avoid a race condition where the sheet opens before the session is confirmed.
+The quit-state handoff is implemented as a module-level holder, `core/lib/pendingNotification.ts`: `app/_layout.tsx` calls `setPendingJobId()` before hydration completes, and `(protected)/_layout.tsx` calls `consumePendingJobId()` (read-and-clear semantics) only after its hydration state reaches `'ready'`. A Zustand slice was deliberately avoided — this value must never survive an app restart on its own, and keeping it out of any store removes the risk of it ever being swept into a future `persist` config. The read-and-clear contract plus the hydration gate is what closes the race condition where the sheet could open before the session is confirmed.

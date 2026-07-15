@@ -15,8 +15,8 @@ The exercise requires at minimum one unit test per core module: the session stor
 | Layer                        | What                                                                                                   | Tools                                         |
 | ---------------------------- | ------------------------------------------------------------------------------------------------------ | --------------------------------------------- |
 | `packages/shared` schemas    | Zod schemas parse valid and invalid shapes correctly                                                   | Jest                                          |
-| `core/services/api.ts`       | Request construction, JWT injection, 401 interception                                                  | Jest, `msw`                                   |
-| `core/services/*.service.ts` | Service functions call the right endpoints with the right params                                       | Jest, `msw`                                   |
+| `core/services/api.ts`       | Request construction, JWT injection, 401 interception                                                  | Jest (mocked `global.fetch`)                  |
+| `core/services/*.service.ts` | Service functions call the right endpoints with the right params                                       | Jest (mocked `global.fetch`)                  |
 | `store/*.store.ts`           | Store actions produce the correct state transitions                                                    | Jest                                          |
 | `core/hooks/`                | Hooks return the correct state given a store and service setup                                         | Jest, React Native Testing Library            |
 | `core/components/`           | Renders correctly against theme tokens, snapshot regression, a11y props                                | Jest, React Native Testing Library, snapshots |
@@ -26,15 +26,13 @@ The exercise requires at minimum one unit test per core module: the session stor
 
 ### Snapshot tests
 
-Snapshot tests are used for regression detection — catching unintended UI changes after a screen or component is considered done.
+Snapshot tests are used for regression detection — catching unintended UI changes after a screen or component is considered done. Behavioral assertions stay in each unit's own test; snapshots only pin the rendered output of things declared complete.
 
-**Component library (`core/components/`):** Every component has a snapshot. Components are stable by design — a snapshot failure is always a signal worth investigating.
+**Component library (`core/components/`):** Every component has a snapshot — `app/core/components/snapshots.test.tsx` pins all exported components, including their meaningful variants (image vs. initials `Avatar`, disabled/loading `Button`, pressable `Card`, error-state `Input`, null-salary `JobCard`, …).
 
-**Feature screens:** A snapshot is added in the same PR that completes the feature, after the developer considers the screen done. The snapshot is reviewed as part of the PR diff. Future PRs that intentionally change the screen must include the updated snapshot — a blind `jest --updateSnapshot` without reviewing the diff is a checklist violation.
+**Feature screens:** Every completed screen pins its snapshot in its own co-located test file (`login`, job search `index`, `applied`, `favorites`, and the `JobDetail` sheet content) — added once the screen's ticket passed verification, per the rule that snapshots cover screens being submitted as complete, not screens under active development. Future PRs that intentionally change a screen must include the updated snapshot, reviewed as part of the PR diff — a blind `jest --updateSnapshot` without reviewing what changed is a checklist violation.
 
 The PR checklist includes: _"Snapshots reviewed, not blindly updated."_
-
-Snapshots are not added to screens under active development — only to screens being submitted as complete.
 
 ### What we do not test
 
@@ -46,7 +44,7 @@ Snapshots are not added to screens under active development — only to screens 
 **Frontend:**
 
 - `jest` + `@testing-library/react-native` — component and hook tests
-- `msw` (Mock Service Worker) — intercepts fetch calls in tests without mocking modules
+- Mocked `global.fetch` / mocked service modules at the network boundary. `msw` was evaluated and deliberately dropped for unit tests: msw v2's ESM-only dependencies fail to transform under `jest-expo` + pnpm's nested `node_modules`, and mocking `fetch` is lighter and idiomatic for unit scope anyway (see `docs/MAP.md`). It remains an option for future genuine integration tests.
 - `@testing-library/jest-native` — additional matchers for React Native
 
 **Backend:**
@@ -77,24 +75,27 @@ describe('auth.store', () => {
 
 ### Example — API service interceptor
 
-```ts
-// core/services/api.test.ts
-describe('api interceptor', () => {
-  it('injects JWT into authenticated requests', async () => {
-    useAuthStore.setState({ token: 'test-jwt' })
-    const handler = rest.get('*/jobs', (req, res, ctx) => {
-      expect(req.headers.get('Authorization')).toBe('Bearer test-jwt')
-      return res(ctx.json({ data: { items: [], pagination: {} } }))
-    })
-    server.use(handler)
-    await api.get('/jobs')
-  })
+The client is a thin `fetch` wrapper, so its tests mock `global.fetch` directly (this is the actual pattern in `app/core/services/api.test.ts`):
 
-  it('clears session and redirects on 401', async () => {
-    server.use(rest.get('*/jobs', (_req, res, ctx) => res(ctx.status(401))))
-    await api.get('/jobs').catch(() => {})
-    expect(useAuthStore.getState().token).toBeNull()
-  })
+```ts
+// core/services/api.test.ts (excerpt)
+it('injects the JWT as Authorization: Bearer <token> on authed requests', async () => {
+  configureApi({ getToken: () => 'tok' })
+  mockResponseOnce(200, { data: { id: '1', email: 'a@b.co' } })
+
+  await get('/me', MeResponseSchema)
+
+  const headers = lastRequestInit().headers as Record<string, string>
+  expect(headers.Authorization).toBe('Bearer tok')
+})
+
+it('invokes onUnauthorized (session clear) on a 401', async () => {
+  const onUnauthorized = jest.fn()
+  configureApi({ onUnauthorized })
+  mockResponseOnce(401, { error: { code: 'TOKEN_EXPIRED', message: 'El token ha expirado' } })
+
+  await expect(get('/me', MeResponseSchema)).rejects.toBeInstanceOf(ApiError)
+  expect(onUnauthorized).toHaveBeenCalled()
 })
 ```
 
@@ -230,6 +231,8 @@ feature/* ──→ develop ──→ [EAS preview → TestFlight + Play Interna
 
 ### Release approval mechanism
 
+> **Status: proposed team policy.** Branch protection and CODEOWNERS enforcement are settings on the hosted GitHub repo, and the EAS profiles above require an EAS project — neither is switched on for this single-author exercise repo. The CI workflow (Decision 4) is active today; the approval layer below is what the team enables the day a second contributor joins.
+
 The `main` branch has GitHub branch protection rules:
 
 - Direct pushes blocked — only `release/*` and `hotfix/*` PRs can target `main`
@@ -317,7 +320,7 @@ Not applied to the frontend — the risk surface there is lower and the rules ad
 
 ---
 
-## Decision 4 · Pre-merge automation with Husky
+## Decision 4 · Pre-merge automation with Husky + CI
 
 Husky runs checks locally before code reaches the remote. Two hooks:
 
@@ -334,6 +337,12 @@ Using `lint-staged` so only staged files are linted — not the entire codebase 
 - `jest --passWithNoTests`
 
 This keeps CI from being the first place failures are caught. A developer knows their branch is clean before it ever hits the remote.
+
+**CI — `.github/workflows/ci.yml`** — the same gate runs on GitHub Actions for every push and PR to `main`/`develop`, as the enforcement backstop that doesn't depend on each contributor having hooks installed:
+
+1. `pnpm install --frozen-lockfile` — a lockfile drift fails the build instead of silently re-resolving
+2. `pnpm typecheck` · `pnpm lint` · `pnpm test`
+3. `pnpm expo:check` (`expo install --check`) — validates every Expo-managed dependency against what the Expo SDK actually pins. This step exists because `tsc`/`eslint`/`jest` never exercise Metro, Babel, or the Expo Go native runtime — a dependency drifting past the SDK's pinned version passes all three and still crashes the app on first boot (this happened; see A6's verification-gate table). `pnpm verify` runs the same four steps locally.
 
 ---
 
@@ -496,12 +505,15 @@ We follow WCAG 2.1 AA as the baseline. Accessibility is enforced at three levels
 
 ### Static analysis — pre-commit
 
-`eslint-plugin-react-native-a11y` runs as part of the ESLint config. Catches the most common violations before code is committed:
+`eslint-plugin-react-native-a11y` runs as part of the ESLint config — `.eslintrc.js` extends `plugin:react-native-a11y/all`, scoped to `app/**/*.tsx`. It catches the most common violations before code is committed:
 
 - Missing `accessibilityLabel` on interactive elements
 - Missing `accessibilityRole` on touchables
-- Touch targets smaller than 44×44pt
+- Labeled touchables without an `accessibilityHint`
+- Images without `accessibilityIgnoresInvertColors`
 - Incorrect or missing `accessibilityState` on toggles (Apply, Favorite buttons)
+
+Turning the plugin on surfaced five real violations in already-reviewed code — missing hints on labeled touchables (`Input`, `JobCard`, the activities remove button), an undescribed modal backdrop in `Select`, and a missing invert-colors flag on `Avatar`'s image — all fixed in the same change, which is exactly the argument for automated enforcement over manual discipline.
 
 ### Testing — component and screen level
 

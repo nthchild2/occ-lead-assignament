@@ -148,3 +148,13 @@ describe('AppliedScreen', () => {
     expect(screen.getByText('Sin postulaciones')).toBeTruthy()
   })
 })
+
+// A4 snapshot policy: this screen is declared complete (activities-screen
+// ticket PASS), so its rendered output is pinned — populated variant, since
+// the list body is the screen's main surface.
+describe('AppliedScreen snapshot (A4 snapshot policy)', () => {
+  it('matches the completed-screen snapshot with one application', () => {
+    setStoreState({ items: [makeApplication()], isLoading: false, error: null })
+    expect(render(<AppliedScreen />).toJSON()).toMatchSnapshot()
+  })
+})

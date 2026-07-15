@@ -1,0 +1,621 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`SearchScreen snapshot (A4 snapshot policy) matches the completed-screen snapshot with results 1`] = `
+<View
+  style={
+    {
+      "backgroundColor": "#F4F4F8",
+      "flex": 1,
+    }
+  }
+>
+  <Text
+    style={
+      {
+        "color": "#08080C",
+        "fontFamily": "Inter_600SemiBold",
+        "fontSize": 18,
+        "paddingHorizontal": 20,
+        "paddingTop": 12,
+      }
+    }
+  >
+    Buscar empleos
+  </Text>
+  <View
+    style={
+      {
+        "gap": 12,
+        "padding": 20,
+      }
+    }
+  >
+    <View>
+      <Text
+        style={
+          {
+            "color": "#55556A",
+            "fontFamily": "Inter_700Bold",
+            "fontSize": 11,
+            "fontWeight": "700",
+            "letterSpacing": 1.76,
+            "marginBottom": 8,
+            "textTransform": "uppercase",
+          }
+        }
+      >
+        Buscar
+      </Text>
+      <TextInput
+        accessibilityHint="Puesto, empresa o palabra clave"
+        accessibilityLabel="Buscar"
+        autoCapitalize="none"
+        autoCorrect={false}
+        onBlur={[Function]}
+        onChangeText={[Function]}
+        onFocus={[Function]}
+        placeholder="Puesto, empresa o palabra clave"
+        placeholderTextColor="#6E6E8A"
+        style={
+          [
+            {
+              "backgroundColor": "#E8E8F0",
+              "borderColor": "#B8B8CB",
+              "borderRadius": 8,
+              "borderWidth": 1,
+              "color": "#08080C",
+              "fontFamily": "Inter_400Regular",
+              "fontSize": 16,
+              "height": 48,
+              "paddingHorizontal": 16,
+            },
+            undefined,
+          ]
+        }
+        value=""
+      />
+    </View>
+    <View
+      style={
+        {
+          "flexDirection": "row",
+          "gap": 12,
+        }
+      }
+    >
+      <View
+        style={
+          {
+            "flex": 1,
+          }
+        }
+      >
+        <View>
+          <Text
+            style={
+              {
+                "color": "#55556A",
+                "fontFamily": "Inter_700Bold",
+                "fontSize": 11,
+                "fontWeight": "700",
+                "letterSpacing": 1.76,
+                "marginBottom": 8,
+                "textTransform": "uppercase",
+              }
+            }
+          >
+            Salario mín.
+          </Text>
+          <TextInput
+            accessibilityHint="0"
+            accessibilityLabel="Salario mín."
+            keyboardType="numeric"
+            onBlur={[Function]}
+            onChangeText={[Function]}
+            onFocus={[Function]}
+            placeholder="0"
+            placeholderTextColor="#6E6E8A"
+            style={
+              [
+                {
+                  "backgroundColor": "#E8E8F0",
+                  "borderColor": "#B8B8CB",
+                  "borderRadius": 8,
+                  "borderWidth": 1,
+                  "color": "#08080C",
+                  "fontFamily": "Inter_400Regular",
+                  "fontSize": 16,
+                  "height": 48,
+                  "paddingHorizontal": 16,
+                },
+                undefined,
+              ]
+            }
+            value=""
+          />
+        </View>
+      </View>
+      <View
+        style={
+          {
+            "flex": 1,
+          }
+        }
+      >
+        <View>
+          <Text
+            style={
+              {
+                "color": "#55556A",
+                "fontFamily": "Inter_700Bold",
+                "fontSize": 11,
+                "fontWeight": "700",
+                "letterSpacing": 1.76,
+                "marginBottom": 8,
+                "textTransform": "uppercase",
+              }
+            }
+          >
+            Salario máx.
+          </Text>
+          <TextInput
+            accessibilityHint="Sin límite"
+            accessibilityLabel="Salario máx."
+            keyboardType="numeric"
+            onBlur={[Function]}
+            onChangeText={[Function]}
+            onFocus={[Function]}
+            placeholder="Sin límite"
+            placeholderTextColor="#6E6E8A"
+            style={
+              [
+                {
+                  "backgroundColor": "#E8E8F0",
+                  "borderColor": "#B8B8CB",
+                  "borderRadius": 8,
+                  "borderWidth": 1,
+                  "color": "#08080C",
+                  "fontFamily": "Inter_400Regular",
+                  "fontSize": 16,
+                  "height": 48,
+                  "paddingHorizontal": 16,
+                },
+                undefined,
+              ]
+            }
+            value=""
+          />
+        </View>
+      </View>
+    </View>
+    <View>
+      <Text
+        style={
+          {
+            "color": "#55556A",
+            "fontFamily": "Inter_700Bold",
+            "fontSize": 11,
+            "fontWeight": "700",
+            "letterSpacing": 1.76,
+            "marginBottom": 8,
+            "textTransform": "uppercase",
+          }
+        }
+      >
+        Ciudad
+      </Text>
+      <View
+        accessibilityRole="button"
+        accessibilityState={
+          {
+            "busy": undefined,
+            "checked": undefined,
+            "disabled": undefined,
+            "expanded": undefined,
+            "selected": undefined,
+          }
+        }
+        accessibilityValue={
+          {
+            "max": undefined,
+            "min": undefined,
+            "now": undefined,
+            "text": undefined,
+          }
+        }
+        accessible={true}
+        collapsable={false}
+        focusable={true}
+        onBlur={[Function]}
+        onClick={[Function]}
+        onFocus={[Function]}
+        onResponderGrant={[Function]}
+        onResponderMove={[Function]}
+        onResponderRelease={[Function]}
+        onResponderTerminate={[Function]}
+        onResponderTerminationRequest={[Function]}
+        onStartShouldSetResponder={[Function]}
+        style={
+          {
+            "alignItems": "center",
+            "backgroundColor": "#E8E8F0",
+            "borderColor": "#B8B8CB",
+            "borderRadius": 8,
+            "borderWidth": 1,
+            "flexDirection": "row",
+            "height": 44,
+            "justifyContent": "space-between",
+            "paddingHorizontal": 14,
+          }
+        }
+      >
+        <Text
+          style={
+            {
+              "color": "#08080C",
+              "fontFamily": "Inter_400Regular",
+              "fontSize": 14,
+            }
+          }
+        >
+          Todas las ciudades
+        </Text>
+      </View>
+    </View>
+    <View>
+      <Text
+        style={
+          {
+            "color": "#55556A",
+            "fontFamily": "Inter_700Bold",
+            "fontSize": 11,
+            "fontWeight": "700",
+            "letterSpacing": 1.76,
+            "marginBottom": 8,
+            "textTransform": "uppercase",
+          }
+        }
+      >
+        Ordenar por
+      </Text>
+      <View
+        accessibilityRole="button"
+        accessibilityState={
+          {
+            "busy": undefined,
+            "checked": undefined,
+            "disabled": undefined,
+            "expanded": undefined,
+            "selected": undefined,
+          }
+        }
+        accessibilityValue={
+          {
+            "max": undefined,
+            "min": undefined,
+            "now": undefined,
+            "text": undefined,
+          }
+        }
+        accessible={true}
+        collapsable={false}
+        focusable={true}
+        onBlur={[Function]}
+        onClick={[Function]}
+        onFocus={[Function]}
+        onResponderGrant={[Function]}
+        onResponderMove={[Function]}
+        onResponderRelease={[Function]}
+        onResponderTerminate={[Function]}
+        onResponderTerminationRequest={[Function]}
+        onStartShouldSetResponder={[Function]}
+        style={
+          {
+            "alignItems": "center",
+            "backgroundColor": "#E8E8F0",
+            "borderColor": "#B8B8CB",
+            "borderRadius": 8,
+            "borderWidth": 1,
+            "flexDirection": "row",
+            "height": 44,
+            "justifyContent": "space-between",
+            "paddingHorizontal": 14,
+          }
+        }
+      >
+        <Text
+          style={
+            {
+              "color": "#08080C",
+              "fontFamily": "Inter_400Regular",
+              "fontSize": 14,
+            }
+          }
+        >
+          Más recientes
+        </Text>
+      </View>
+    </View>
+  </View>
+  <View
+    style={
+      {
+        "flex": 1,
+      }
+    }
+  >
+    <View
+      onEndReached={[MockFunction]}
+      testID="mock-flash-list"
+    >
+      <View>
+        <View
+          accessibilityHint="Abre el detalle de la vacante"
+          accessibilityLabel="Backend Engineer, Acme Corp"
+          accessibilityRole="button"
+          accessibilityState={
+            {
+              "busy": undefined,
+              "checked": undefined,
+              "disabled": undefined,
+              "expanded": undefined,
+              "selected": undefined,
+            }
+          }
+          accessibilityValue={
+            {
+              "max": undefined,
+              "min": undefined,
+              "now": undefined,
+              "text": undefined,
+            }
+          }
+          accessible={true}
+          collapsable={false}
+          focusable={true}
+          onBlur={[Function]}
+          onClick={[Function]}
+          onFocus={[Function]}
+          onResponderGrant={[Function]}
+          onResponderMove={[Function]}
+          onResponderRelease={[Function]}
+          onResponderTerminate={[Function]}
+          onResponderTerminationRequest={[Function]}
+          onStartShouldSetResponder={[Function]}
+        >
+          <View
+            style={
+              [
+                {
+                  "backgroundColor": "#FFFFFF",
+                  "borderColor": "#DDDDE6",
+                  "borderRadius": 14,
+                  "borderWidth": 1,
+                  "padding": 20,
+                },
+                {
+                  "elevation": 3,
+                  "shadowColor": "#000000",
+                  "shadowOffset": {
+                    "height": 3,
+                    "width": 3,
+                  },
+                  "shadowOpacity": 1,
+                  "shadowRadius": 0,
+                },
+                {
+                  "gap": 8,
+                  "marginBottom": 12,
+                },
+              ]
+            }
+          >
+            <Text
+              style={
+                {
+                  "color": "#08080C",
+                  "fontFamily": "Inter_400Regular",
+                  "fontSize": 16,
+                  "fontWeight": "600",
+                }
+              }
+            >
+              Backend Engineer
+            </Text>
+            <Text
+              style={
+                {
+                  "color": "#55556A",
+                  "fontFamily": "Inter_400Regular",
+                  "fontSize": 14,
+                }
+              }
+            >
+              Acme Corp
+               · 
+              Ciudad de México
+            </Text>
+            <Text
+              style={
+                {
+                  "color": "#2E2E3E",
+                  "fontFamily": "JetBrainsMono_500Medium",
+                  "fontSize": 14,
+                }
+              }
+            >
+              $35,000
+            </Text>
+            <View
+              style={
+                {
+                  "flexDirection": "row",
+                  "flexWrap": "wrap",
+                  "gap": 8,
+                }
+              }
+            >
+              <View
+                style={
+                  {
+                    "alignSelf": "flex-start",
+                    "backgroundColor": "rgba(244, 244, 248, 0.72)",
+                    "borderColor": "rgba(0, 0, 0, 0.06)",
+                    "borderRadius": 2,
+                    "borderWidth": 1,
+                    "paddingHorizontal": 10,
+                    "paddingVertical": 4,
+                  }
+                }
+              >
+                <Text
+                  style={
+                    {
+                      "color": "#08080C",
+                      "fontFamily": "Inter_700Bold",
+                      "fontSize": 11,
+                      "fontWeight": "700",
+                      "letterSpacing": 1.76,
+                      "textTransform": "uppercase",
+                    }
+                  }
+                >
+                  remote
+                </Text>
+              </View>
+            </View>
+          </View>
+        </View>
+      </View>
+      <View>
+        <View
+          accessibilityHint="Abre el detalle de la vacante"
+          accessibilityLabel="Mobile Lead, Acme Corp"
+          accessibilityRole="button"
+          accessibilityState={
+            {
+              "busy": undefined,
+              "checked": undefined,
+              "disabled": undefined,
+              "expanded": undefined,
+              "selected": undefined,
+            }
+          }
+          accessibilityValue={
+            {
+              "max": undefined,
+              "min": undefined,
+              "now": undefined,
+              "text": undefined,
+            }
+          }
+          accessible={true}
+          collapsable={false}
+          focusable={true}
+          onBlur={[Function]}
+          onClick={[Function]}
+          onFocus={[Function]}
+          onResponderGrant={[Function]}
+          onResponderMove={[Function]}
+          onResponderRelease={[Function]}
+          onResponderTerminate={[Function]}
+          onResponderTerminationRequest={[Function]}
+          onStartShouldSetResponder={[Function]}
+        >
+          <View
+            style={
+              [
+                {
+                  "backgroundColor": "#FFFFFF",
+                  "borderColor": "#DDDDE6",
+                  "borderRadius": 14,
+                  "borderWidth": 1,
+                  "padding": 20,
+                },
+                {
+                  "elevation": 3,
+                  "shadowColor": "#000000",
+                  "shadowOffset": {
+                    "height": 3,
+                    "width": 3,
+                  },
+                  "shadowOpacity": 1,
+                  "shadowRadius": 0,
+                },
+                {
+                  "gap": 8,
+                  "marginBottom": 12,
+                },
+              ]
+            }
+          >
+            <Text
+              style={
+                {
+                  "color": "#08080C",
+                  "fontFamily": "Inter_400Regular",
+                  "fontSize": 16,
+                  "fontWeight": "600",
+                }
+              }
+            >
+              Mobile Lead
+            </Text>
+            <Text
+              style={
+                {
+                  "color": "#55556A",
+                  "fontFamily": "Inter_400Regular",
+                  "fontSize": 14,
+                }
+              }
+            >
+              Acme Corp
+               · 
+              Ciudad de México
+            </Text>
+            <View
+              style={
+                {
+                  "flexDirection": "row",
+                  "flexWrap": "wrap",
+                  "gap": 8,
+                }
+              }
+            >
+              <View
+                style={
+                  {
+                    "alignSelf": "flex-start",
+                    "backgroundColor": "rgba(244, 244, 248, 0.72)",
+                    "borderColor": "rgba(0, 0, 0, 0.06)",
+                    "borderRadius": 2,
+                    "borderWidth": 1,
+                    "paddingHorizontal": 10,
+                    "paddingVertical": 4,
+                  }
+                }
+              >
+                <Text
+                  style={
+                    {
+                      "color": "#08080C",
+                      "fontFamily": "Inter_700Bold",
+                      "fontSize": 11,
+                      "fontWeight": "700",
+                      "letterSpacing": 1.76,
+                      "textTransform": "uppercase",
+                    }
+                  }
+                >
+                  remote
+                </Text>
+              </View>
+            </View>
+          </View>
+        </View>
+      </View>
+    </View>
+  </View>
+</View>
+`;
