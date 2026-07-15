@@ -153,7 +153,7 @@ La especificación requiere que al tocar una notificación push se abra el sheet
 
 ### Decisión
 
-El deep link se implementa como una ruta dinámica dedicada: `occ://vacante/:id` resuelve a `app/(protected)/vacante/[id].tsx`, que Expo Router auto-registra como destino de deep link a partir de la ruta del archivo. La ruta no renderiza UI — lee el parámetro `id`, establece el empleo activo y redirige de inmediato a la raíz de tabs; el efecto existente del layout protegido que observa `activeJobId` (Decisión 2) presenta entonces el sheet sobre la pestaña que esté activa:
+El deep link se implementa como una ruta dinámica dedicada: `occ://vacante/:id` resuelve a `app/(protected)/vacante/[id].tsx`. Expo Router registra automáticamente rutas basadas en archivos como manejadores de deep link — la ruta del archivo `app/(protected)/vacante/[id].tsx` se convierte en el manejador de esquema `occ://vacante/:id` sin configuración adicional. La ruta no renderiza UI — lee el parámetro `id`, establece el empleo activo y redirige de inmediato a la raíz de tabs; el efecto existente del layout protegido que observa `activeJobId` (Decisión 2) presenta entonces el sheet sobre la pestaña que esté activa:
 
 ```ts
 // app/(protected)/vacante/[id].tsx
