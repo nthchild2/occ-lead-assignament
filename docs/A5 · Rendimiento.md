@@ -4,6 +4,8 @@
 
 Este documento cubre las métricas que monitoreamos en producción, las herramientas que usamos y las optimizaciones concretas aplicadas a la lista de empleos. También cubre cómo se gestiona el prefetch del swipe sin impactar el render inicial.
 
+> **Estado de implementación.** Las optimizaciones de FlashList (Decisión 2) y la estrategia de prefetch con `InteractionManager` (Decisión 3) están implementadas y vivas en el código. El stack de monitoreo y analytics (Decisiones 1 y 4) es el **plan de producción, no está cableado en este ejercicio**: Sentry no es dependencia del proyecto, y los paquetes `@react-native-firebase/perf` / `analytics` están instalados pero nunca se inicializan — hoy no se dispara ningún trace ni evento. Se documentan aquí para que, el día que la app se lance, qué instrumentar y por qué ya esté decidido; cada snippet de código en las Decisiones 1 y 4 debe leerse como la integración prevista, no como código existente.
+
 ---
 
 ## Decisión 1 · Monitoreo en producción

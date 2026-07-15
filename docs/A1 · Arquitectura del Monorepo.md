@@ -91,7 +91,7 @@ El ejercicio tiene tres artefactos distintos con un único punto de acoplamiento
 
 ### Decisión
 
-Usamos **pnpm workspaces** con tres paquetes: `app`, `backend` y `packages/shared`. El paquete compartido se referencia como `@occ/shared: "workspace:*"` desde los otros dos.
+Usamos **pnpm workspaces** (declarados en `pnpm-workspace.yaml`) con tres paquetes: `app`, `backend` y `packages/shared`. El paquete compartido se referencia como `@occ/shared: "workspace:*"` desde los otros dos — un protocolo que npm no soporta, y por eso `npm install` falla en este repo por diseño.
 
 - Un cambio en un esquema Zod en `shared` rompe el build de cualquier consumidor que no se adapte. El compilador es el contrato.
 - Sin sincronización manual de tipos entre app y backend.

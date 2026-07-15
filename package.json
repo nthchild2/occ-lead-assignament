@@ -15,6 +15,8 @@
     "lint:fix": "eslint . --ext .ts,.tsx --fix",
     "format": "prettier --write \"**/*.{ts,tsx,js,json,md}\"",
     "format:check": "prettier --check \"**/*.{ts,tsx,js,json,md}\"",
+    "expo:check": "pnpm --filter './app' exec expo install --check",
+    "verify": "pnpm typecheck && pnpm lint && pnpm test && pnpm expo:check",
     "aidlc:cite": "node scripts/aidlc/validate-citations.mjs",
     "aidlc:coverage": "node scripts/aidlc/check-coverage.mjs"
   },
@@ -24,10 +26,17 @@
     "eslint": "^8.57.0",
     "eslint-plugin-import": "^2.29.0",
     "eslint-plugin-react-hooks": "^4.6.0",
+    "eslint-plugin-react-native-a11y": "^3.5.1",
     "eslint-plugin-security": "^3.0.0",
     "husky": "^9.0.0",
     "lint-staged": "^15.0.0",
     "prettier": "^3.2.0",
     "typescript": "^5.4.0"
+  },
+  "pnpm": {
+    "overrides": {
+      "react-native-worklets": "0.5.1",
+      "babel-preset-expo": "~54.0.0"
+    }
   }
 }

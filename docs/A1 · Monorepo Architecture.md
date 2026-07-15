@@ -76,14 +76,14 @@ occ-lead-ejercicio/
 │   ├── A3-navigation.md
 │   ├── A4-quality.md
 │   └── A5-performance.md
-├── package.json                         ← workspace root (npm workspaces)
+├── package.json                         ← workspace root (pnpm workspaces)
 ├── .env.example
 └── README.md
 ```
 
 ---
 
-## Decision 1 · Monorepo with npm workspaces
+## Decision 1 · Monorepo with pnpm workspaces
 
 ### Context
 
@@ -91,7 +91,7 @@ The exercise has three distinct artifacts with one intentional coupling point: t
 
 ### Decision
 
-We use **npm workspaces** with three packages: `app`, `backend`, and `packages/shared`. The shared package is referenced as `@occ/shared: "workspace:*"` from the other two.
+We use **pnpm workspaces** (declared in `pnpm-workspace.yaml`) with three packages: `app`, `backend`, and `packages/shared`. The shared package is referenced as `@occ/shared: "workspace:*"` from the other two — a protocol npm does not support, which is why `npm install` fails in this repo by design.
 
 - A change to a Zod schema in `shared` breaks the build of any consumer that doesn't adapt. The compiler is the contract.
 - No manual type synchronization between app and backend.
@@ -138,8 +138,9 @@ If a domain needs to scale independently, the change is to replace the direct im
 - Future extraction of a domain is a transport layer change, not a business logic change.
 
 **Alternatives considered:**
-- *Microservices from the start*: unjustified operational overhead for the current scope. A small team paying the cost of microservices without the benefit of independent scaling is operational debt.
-- *Unstructured monolith*: faster at first, impossible to maintain at scale.
+
+- _Microservices from the start_: unjustified operational overhead for the current scope. A small team paying the cost of microservices without the benefit of independent scaling is operational debt.
+- _Unstructured monolith_: faster at first, impossible to maintain at scale.
 
 ---
 
@@ -153,19 +154,20 @@ Within each domain, we need to separate three concerns: the HTTP contract (what 
 
 Within each domain we apply Clean Architecture layers pragmatically:
 
-| File | Layer | Responsibility |
-|---|---|---|
-| `*.schema.ts` | Entities | Pure types, Zod schemas. No framework imports. |
-| `*.service.ts` | Use Cases | Business logic. No Express imports. |
-| `*.router.ts` | Interface Adapter | Translates HTTP ↔ service. No business logic. |
-| `*.seed.ts` | Infrastructure | Data and external dependencies. |
+| File           | Layer             | Responsibility                                 |
+| -------------- | ----------------- | ---------------------------------------------- |
+| `*.schema.ts`  | Entities          | Pure types, Zod schemas. No framework imports. |
+| `*.service.ts` | Use Cases         | Business logic. No Express imports.            |
+| `*.router.ts`  | Interface Adapter | Translates HTTP ↔ service. No business logic.  |
+| `*.seed.ts`    | Infrastructure    | Data and external dependencies.                |
 
 - `jobs.service.ts` does not import anything from Express. If the team migrates to Fastify, a Lambda, or a queue worker tomorrow, the service is not modified.
 - Services are testable without spinning up an HTTP server.
 - The framework (Express) is an implementation detail, not an architectural constraint.
 
 **Alternatives considered:**
-- *Full Clean Architecture with abstract interfaces for everything*: over-engineering for this scope. Adds indirection without tangible benefit when there is only one implementor.
+
+- _Full Clean Architecture with abstract interfaces for everything_: over-engineering for this scope. Adds indirection without tangible benefit when there is only one implementor.
 
 ---
 
@@ -204,7 +206,7 @@ The exercise proposes an `{ ok: boolean, data, error }` envelope. This pattern i
 The important distinction, noted by the Google Cloud API Design Guide, is between **transport errors** and **domain errors**:
 
 - **Transport errors** (`404 Not Found`, `500 Internal Server Error`) → the HTTP status code is the correct mechanism.
-- **Domain errors** (`ALREADY_APPLIED`, `ACCOUNT_SUSPENDED`) → the HTTP status code is insufficient or misleading. A `409 Conflict` does not explain *what* conflict or *why* it matters to the application's logic.
+- **Domain errors** (`ALREADY_APPLIED`, `ACCOUNT_SUSPENDED`) → the HTTP status code is insufficient or misleading. A `409 Conflict` does not explain _what_ conflict or _why_ it matters to the application's logic.
 
 ### Decision
 
@@ -244,15 +246,18 @@ The `ok` field is removed because its value can always be derived from the HTTP 
 ### Consequences
 
 **Positive:**
+
 - No redundancy between HTTP status and body. One source of truth per concern.
 - The client can branch logic by `error.code` without depending on message strings (which can change).
 
 **Negative:**
+
 - Deviates from the envelope the exercise explicitly proposes. This decision is documented as a reasoned improvement, not a non-compliance.
 
 **Alternatives considered:**
-- *RFC 9457 Problem Details*: more complete IETF standard, includes `type` (URI), `title`, `detail`, `instance`. More verbose than necessary for this scope, but worth revisiting when the API becomes public.
-- *Keep `{ ok, data, error }`*: acceptable as an internal team convention, but introduces structural redundancy that can produce subtle bugs in clients that prioritize `ok` over the HTTP status.
+
+- _RFC 9457 Problem Details_: more complete IETF standard, includes `type` (URI), `title`, `detail`, `instance`. More verbose than necessary for this scope, but worth revisiting when the API becomes public.
+- _Keep `{ ok, data, error }`_: acceptable as an internal team convention, but introduces structural redundancy that can produce subtle bugs in clients that prioritize `ok` over the HTTP status.
 
 ---
 

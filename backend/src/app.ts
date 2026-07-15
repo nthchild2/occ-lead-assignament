@@ -45,8 +45,8 @@ app.use(errorMiddleware)
 // Skip binding a real port under Jest (NODE_ENV=test) so supertest can import
 // `{ app }` without leaking an open server handle.
 if (env.NODE_ENV !== 'test') {
-  const server = app.listen(PORT, () => {
-    logger.info({ port: PORT }, 'Server started')
+  const server = app.listen(PORT, '0.0.0.0', () => {
+    logger.info({ port: PORT }, 'Server started on all interfaces')
   })
 
   // Graceful shutdown

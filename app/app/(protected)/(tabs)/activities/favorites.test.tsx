@@ -136,3 +136,13 @@ describe('FavoritesScreen', () => {
     expect(screen.getByText('Sin favoritos')).toBeTruthy()
   })
 })
+
+// A4 snapshot policy: this screen is declared complete (activities-screen
+// ticket PASS), so its rendered output is pinned — populated variant, since
+// the list body is the screen's main surface.
+describe('FavoritesScreen snapshot (A4 snapshot policy)', () => {
+  it('matches the completed-screen snapshot with one favorite', () => {
+    setStoreState({ items: [makeJob()], isLoading: false, error: null })
+    expect(render(<FavoritesScreen />).toJSON()).toMatchSnapshot()
+  })
+})

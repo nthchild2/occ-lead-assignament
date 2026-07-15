@@ -2,10 +2,10 @@ import type { Application } from '@occ/shared'
 import { useEffect } from 'react'
 import { Text, View } from 'react-native'
 
+import { ActivityList, type ActivityRow } from '../../../../core/components'
 import { useTheme } from '../../../../core/hooks/useTheme'
 import { useApplicationsStore } from '../../../../store/applications.store'
 import { useJobsStore } from '../../../../store/jobs.store'
-import { ActivityList, type ActivityRow } from './ActivityList'
 
 function toRow(application: Application): ActivityRow {
   return { id: application.jobId, job: application.job }

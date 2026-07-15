@@ -1,0 +1,43 @@
+name: CI
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Typecheck
+        run: pnpm typecheck
+
+      - name: Lint
+        run: pnpm lint
+
+      - name: Test
+        run: pnpm test
+
+      - name: Expo SDK dependency check
+        # Verifies every Expo-managed package (reanimated, worklets,
+        # babel-preset-expo, etc.) matches what Expo SDK 54 actually expects —
+        # `tsc`/`eslint`/`jest` never exercise Metro/Babel/the Expo Go native
+        # runtime, so this is the only gate that catches a version drift like
+        # the one that broke the app's first boot on a clean clone (see A6's
+        # Decision 3 table and the follow-up entry above it).
+        run: pnpm expo:check

@@ -11,10 +11,21 @@ interface CardProps extends ViewProps {
   onPress?: () => void
 }
 
-export function Card({ shadow = 'md', onPress, style, children, ...rest }: CardProps) {
+export function Card({
+  shadow = 'md',
+  onPress,
+  style,
+  children,
+  accessibilityLabel,
+  accessibilityHint,
+  ...rest
+}: CardProps) {
   const theme = useTheme()
   const shadowStyle = shadow === 'none' ? {} : shadowForSize(theme, shadow)
 
+  // When pressable, the a11y label/hint belong on the Pressable (the node
+  // screen readers focus), not the inner View — so they're destructured out
+  // of `rest` and attached to whichever node is the interactive one.
   const content = (
     <View
       style={[
@@ -28,6 +39,8 @@ export function Card({ shadow = 'md', onPress, style, children, ...rest }: CardP
         shadowStyle,
         style,
       ]}
+      accessibilityLabel={onPress ? undefined : accessibilityLabel}
+      accessibilityHint={onPress ? undefined : accessibilityHint}
       {...rest}
     >
       {children}
@@ -37,7 +50,12 @@ export function Card({ shadow = 'md', onPress, style, children, ...rest }: CardP
   if (!onPress) return content
 
   return (
-    <Pressable accessibilityRole="button" onPress={onPress}>
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={accessibilityLabel}
+      accessibilityHint={accessibilityHint}
+      onPress={onPress}
+    >
       {content}
     </Pressable>
   )

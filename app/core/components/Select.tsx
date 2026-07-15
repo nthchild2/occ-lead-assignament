@@ -73,6 +73,9 @@ export function Select<T extends string>({
 
       <Modal visible={open} transparent animationType="fade" onRequestClose={() => setOpen(false)}>
         <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Cerrar selector"
+          accessibilityHint="Cierra la lista de opciones sin cambiar la selección"
           style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.4)', justifyContent: 'flex-end' }}
           onPress={() => setOpen(false)}
         >

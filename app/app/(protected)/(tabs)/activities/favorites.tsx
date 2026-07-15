@@ -2,10 +2,10 @@ import type { Job } from '@occ/shared'
 import { useEffect } from 'react'
 import { Text, View } from 'react-native'
 
+import { ActivityList, type ActivityRow } from '../../../../core/components'
 import { useTheme } from '../../../../core/hooks/useTheme'
 import { useFavoritesStore } from '../../../../store/favorites.store'
 import { useJobsStore } from '../../../../store/jobs.store'
-import { ActivityList, type ActivityRow } from './ActivityList'
 
 function toRow(job: Job): ActivityRow {
   return { id: job.id, job }

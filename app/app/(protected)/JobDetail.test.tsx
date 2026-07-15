@@ -565,3 +565,16 @@ describe('JobDetail swipe', () => {
     expect(screen.getByText('No hay más vacantes por mostrar.')).toBeTruthy()
   })
 })
+
+// A4 snapshot policy: this sheet content is declared complete
+// (job-detail-sheet / job-detail-swipe tickets PASS), so its rendered output
+// is pinned — full job (salary + tags), not-yet-applied/not-favorited state.
+describe('JobDetail snapshot (A4 snapshot policy)', () => {
+  it('matches the completed-sheet snapshot', () => {
+    const job = makeJob()
+    setActiveJobId('job-1', [job])
+    mockedIsJobApplied.mockReturnValue(false)
+    mockedIsJobFavorited.mockReturnValue(false)
+    expect(render(<JobDetail />).toJSON()).toMatchSnapshot()
+  })
+})

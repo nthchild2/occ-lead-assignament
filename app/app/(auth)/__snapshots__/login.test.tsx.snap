@@ -1,0 +1,247 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`LoginScreen snapshot (A4 snapshot policy) matches the completed-screen snapshot 1`] = `
+<View
+  style={
+    {
+      "backgroundColor": "#F4F4F8",
+      "flex": 1,
+    }
+  }
+>
+  <View
+    onLayout={[Function]}
+    style={
+      [
+        {
+          "flex": 1,
+          "justifyContent": "center",
+          "padding": 24,
+        },
+        {
+          "paddingBottom": 0,
+        },
+      ]
+    }
+  >
+    <Text
+      style={
+        {
+          "color": "#08080C",
+          "fontFamily": "Inter_600SemiBold",
+          "fontSize": 18,
+          "marginBottom": 24,
+        }
+      }
+    >
+      Iniciar sesión
+    </Text>
+    <View
+      style={
+        {
+          "marginBottom": 16,
+        }
+      }
+    >
+      <View>
+        <Text
+          style={
+            {
+              "color": "#55556A",
+              "fontFamily": "Inter_700Bold",
+              "fontSize": 11,
+              "fontWeight": "700",
+              "letterSpacing": 1.76,
+              "marginBottom": 8,
+              "textTransform": "uppercase",
+            }
+          }
+        >
+          Email
+        </Text>
+        <TextInput
+          accessibilityLabel="Email"
+          autoCapitalize="none"
+          autoCorrect={false}
+          keyboardType="email-address"
+          onBlur={[Function]}
+          onChangeText={[Function]}
+          onFocus={[Function]}
+          placeholderTextColor="#6E6E8A"
+          style={
+            [
+              {
+                "backgroundColor": "#E8E8F0",
+                "borderColor": "#B8B8CB",
+                "borderRadius": 8,
+                "borderWidth": 1,
+                "color": "#08080C",
+                "fontFamily": "Inter_400Regular",
+                "fontSize": 16,
+                "height": 48,
+                "paddingHorizontal": 16,
+              },
+              undefined,
+            ]
+          }
+          value=""
+        />
+      </View>
+    </View>
+    <View
+      style={
+        {
+          "marginBottom": 16,
+        }
+      }
+    >
+      <View>
+        <Text
+          style={
+            {
+              "color": "#55556A",
+              "fontFamily": "Inter_700Bold",
+              "fontSize": 11,
+              "fontWeight": "700",
+              "letterSpacing": 1.76,
+              "marginBottom": 8,
+              "textTransform": "uppercase",
+            }
+          }
+        >
+          Password
+        </Text>
+        <TextInput
+          accessibilityLabel="Password"
+          onBlur={[Function]}
+          onChangeText={[Function]}
+          onFocus={[Function]}
+          placeholderTextColor="#6E6E8A"
+          secureTextEntry={true}
+          style={
+            [
+              {
+                "backgroundColor": "#E8E8F0",
+                "borderColor": "#B8B8CB",
+                "borderRadius": 8,
+                "borderWidth": 1,
+                "color": "#08080C",
+                "fontFamily": "Inter_400Regular",
+                "fontSize": 16,
+                "height": 48,
+                "paddingHorizontal": 16,
+              },
+              undefined,
+            ]
+          }
+          value=""
+        />
+      </View>
+    </View>
+    <View
+      style={
+        [
+          {
+            "shadowOpacity": 1,
+            "transform": [
+              {
+                "translateX": 0,
+              },
+              {
+                "translateY": 0,
+              },
+            ],
+          },
+          {
+            "elevation": 6,
+            "shadowColor": "#000000",
+            "shadowOffset": {
+              "height": 6,
+              "width": 6,
+            },
+            "shadowRadius": 0,
+          },
+          false,
+        ]
+      }
+    >
+      <View
+        accessibilityRole="button"
+        accessibilityState={
+          {
+            "busy": undefined,
+            "checked": undefined,
+            "disabled": false,
+            "expanded": undefined,
+            "selected": undefined,
+          }
+        }
+        accessibilityValue={
+          {
+            "max": undefined,
+            "min": undefined,
+            "now": undefined,
+            "text": undefined,
+          }
+        }
+        accessible={true}
+        collapsable={false}
+        focusable={true}
+        onBlur={[Function]}
+        onClick={[Function]}
+        onFocus={[Function]}
+        onResponderGrant={[Function]}
+        onResponderMove={[Function]}
+        onResponderRelease={[Function]}
+        onResponderTerminate={[Function]}
+        onResponderTerminationRequest={[Function]}
+        onStartShouldSetResponder={[Function]}
+        style={
+          [
+            {
+              "alignItems": "center",
+              "flexDirection": "row",
+              "justifyContent": "center",
+            },
+            {
+              "backgroundColor": "#08080C",
+              "borderColor": "#000000",
+              "borderRadius": 8,
+              "borderWidth": 1.5,
+              "height": 48,
+              "opacity": 1,
+              "paddingHorizontal": 20,
+            },
+            false,
+          ]
+        }
+      >
+        <View
+          style={
+            {
+              "alignItems": "center",
+              "flexDirection": "row",
+              "gap": 8,
+            }
+          }
+        >
+          <Text
+            style={
+              {
+                "color": "#C6FF2E",
+                "fontFamily": "Inter_600SemiBold",
+                "fontSize": 13,
+                "fontWeight": "600",
+                "letterSpacing": 0.52,
+                "textTransform": "uppercase",
+              }
+            }
+          >
+            Iniciar sesión
+          </Text>
+        </View>
+      </View>
+    </View>
+  </View>
+</View>
+`;

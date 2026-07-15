@@ -18,7 +18,7 @@ This project was built in cooperation with Claude Code, but every architectural 
 
 ### The design system
 
-`app/core/theme/` is the single source of visual truth. `tokens.ts` holds raw values — a literal color palette, spacing scale, typography, radii, shadows, motion durations — for both light and dark schemes. `theme.ts` composes those raw tokens into a `Theme` interface that components consume via `useTheme()`. Components never hardcode a color, a spacing value, or a font size; they read `theme.colors.fg`, `theme.spacing[3]`, `theme.type.headingSm`, and so on. This is enforced, not just conventional — `.eslintrc.js` blocks inline style literals and `import/no-restricted-paths` stops a component from reaching into `tokens.ts` directly and bypassing the semantic layer.
+`app/core/theme/` is the single source of visual truth. `tokens.ts` holds raw values — a literal color palette, spacing scale, typography, radii, shadows, motion durations — for both light and dark schemes. `theme.ts` composes those raw tokens into a `Theme` interface that components consume via `useTheme()`. Components never hardcode a color, a spacing value, or a font size; they read `theme.colors.fg`, `theme.spacing[3]`, `theme.type.headingSm`, and so on. `.eslintrc.js`'s `no-restricted-imports` rule enforces that any component importing `tokens.ts` directly (only `core/theme/` may compose raw tokens) will fail linting.
 
 The practical payoff: switching from light to dark mode, or re-skinning the whole app, is a change in one file (`tokens.ts`), not a grep-and-replace across every screen. `app/core/components/` (`Button`, `Card`, `Input`, `Select`, `Badge`, `Skeleton`, `EmptyState`, `ErrorState`, …) is the resulting component library, each one theme-driven and reusable across screens.
 
@@ -39,7 +39,7 @@ AIDLC (AI-Assisted Development Lifecycle) is the framework this repo's features 
 
 - **Traceability is mechanical, not aspirational.** Every requirement must map to a change, and every change must map to a requirement — a requirement with no change is a gap, a change with no requirement is scope creep, and both fail the verification phase. Every one of the 15 feature tickets in `docs/work/ROADMAP.md` has its own `docs/work/<feature>/00-spec.md` through `04-verify.md`, forming a committed, auditable trail of what was built, why, and how it was checked.
 - **The verification gate is non-negotiable.** No ticket is marked done without `tsc --noEmit`, `eslint`, and `jest` passing for every workspace it touched. This caught real bugs during the build (see A6, Decision 3, for the actual list) — including bugs that predated any AI-authored change.
-- **One known gap, documented honestly:** that gate is `tsc`+`eslint`+`jest`, none of which actually launch the app. A couple of config-level bugs (a broken Expo plugin entry, a missing dev-only logging dependency) only surfaced when the app was run for real after all 15 tickets had independently passed. That's written up in [`docs/work/push-notifications/05-post-verify-fix.md`](docs/work/push-notifications/05-post-verify-fix.md) as a correction to the record, not swept under the rug.
+- **A gap in that gate, found and closed:** `tsc`+`eslint`+`jest` never actually launch the app — they don't exercise Metro, Babel, or the Expo Go native runtime. Config-level bugs (a broken Expo plugin entry, a missing dev-only logging dependency) and, later, SDK version drift (`babel-preset-expo`/`react-native-worklets` resolving past what Expo Go 54 ships natively — caught by an external clean-clone review) all sailed through the original gate and only surfaced at a real boot. The record of the first round lives in [`docs/work/push-notifications/05-post-verify-fix.md`](docs/work/push-notifications/05-post-verify-fix.md); the fix for the second was to widen the gate itself — `expo install --check` now runs in `pnpm verify` and in CI (`.github/workflows/ci.yml`), and the drifting packages are pinned via `pnpm.overrides`.
 
 `.claude/agents/` holds one subagent per phase (researcher, planner, implementer, verifier); `.claude/commands/` holds the orchestrator (`/aidlc-run`) and per-phase commands for manual takeover. The pipeline runs at a configurable "gate policy" — full-control (human approves every phase), balanced (checkpoint only at PLAN), or full-auto — but two hard stops apply regardless of mode: ambiguity always escalates to a human instead of being guessed, and a failed verification always loops back instead of being marked done.
 
@@ -122,6 +122,21 @@ pnpm exec expo start -c
 ```
 
 The backend must be running first — the app resolves the API through `EXPO_PUBLIC_API_BASE_URL`, which points at `http://localhost:3000` above. `-c` clears Metro's cache; drop it for a faster subsequent start once things are stable.
+
+**Android emulator:** `localhost` inside the emulator refers to the emulator itself, not your machine, so the app won't reach the backend with the default value. Pick one:
+
+```bash
+# Option A — forward the port into the emulator (keeps localhost in .env)
+adb reverse tcp:3000 tcp:3000
+
+# Option B — use the emulator's alias for the host machine in app/.env
+EXPO_PUBLIC_API_BASE_URL=http://10.0.2.2:3000
+
+# Option C — use your machine's LAN IP (also works for physical devices)
+EXPO_PUBLIC_API_BASE_URL=http://<your-lan-ip>:3000
+```
+
+iOS Simulator shares the host's network stack, so `localhost` works there as-is. After changing `app/.env`, restart Metro with `-c` — env values are inlined at bundle time, not read live.
 
 **Must run from `app/`, not the repo root.** `expo` is only a dependency of the `app` workspace. Running `pnpm exec expo start` from the repo root fails with `ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL — Command "expo" not found`, because pnpm treats a root-level `exec` as recursive across every workspace and fails on the first one without `expo` installed. If you don't want to `cd`, run `pnpm --filter ./app exec expo start -c` from the root instead.
 

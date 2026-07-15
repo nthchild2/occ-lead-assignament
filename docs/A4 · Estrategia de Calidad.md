@@ -15,8 +15,8 @@ El ejercicio requiere como mínimo un test unitario por módulo core: el store d
 | Capa                          | Qué                                                                                                                                | Herramientas                                  |
 | ----------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------- |
 | Esquemas de `packages/shared` | Los esquemas Zod parsean correctamente formas válidas e inválidas                                                                  | Jest                                          |
-| `core/services/api.ts`        | Construcción de requests, inyección de JWT, intercepción de 401                                                                    | Jest, `msw`                                   |
-| `core/services/*.service.ts`  | Las funciones de servicio llaman a los endpoints correctos con los parámetros correctos                                            | Jest, `msw`                                   |
+| `core/services/api.ts`        | Construcción de requests, inyección de JWT, intercepción de 401                                                                    | Jest (`global.fetch` mockeado)                |
+| `core/services/*.service.ts`  | Las funciones de servicio llaman a los endpoints correctos con los parámetros correctos                                            | Jest (`global.fetch` mockeado)                |
 | `store/*.store.ts`            | Las acciones del store producen las transiciones de estado correctas                                                               | Jest                                          |
 | `core/hooks/`                 | Los hooks retornan el estado correcto dado un store y configuración de servicio                                                    | Jest, React Native Testing Library            |
 | `core/components/`            | Renderiza correctamente contra tokens de tema, regresión por snapshot, props de a11y                                               | Jest, React Native Testing Library, snapshots |
@@ -26,15 +26,13 @@ El ejercicio requiere como mínimo un test unitario por módulo core: el store d
 
 ### Tests de snapshot
 
-Los tests de snapshot se usan para detección de regresiones — capturar cambios de UI no intencionales después de que una pantalla o componente se considera terminado.
+Los tests de snapshot se usan para detección de regresiones — capturar cambios de UI no intencionales después de que una pantalla o componente se considera terminado. Las aserciones de comportamiento viven en el test propio de cada unidad; los snapshots solo fijan el output renderizado de lo que se declaró completo.
 
-**Biblioteca de componentes (`core/components/`):** Cada componente tiene un snapshot. Los componentes son estables por diseño — un fallo de snapshot siempre es una señal que vale la pena investigar.
+**Biblioteca de componentes (`core/components/`):** Cada componente tiene un snapshot — `app/core/components/snapshots.test.tsx` fija todos los componentes exportados, incluyendo sus variantes significativas (`Avatar` con imagen vs. iniciales, `Button` disabled/loading, `Card` presionable, `Input` en estado de error, `JobCard` sin salario, …).
 
-**Pantallas de funcionalidades:** Un snapshot se agrega en el mismo PR que completa la funcionalidad, después de que el desarrollador considera la pantalla terminada. El snapshot se revisa como parte del diff del PR. Los PRs futuros que modifiquen intencionalmente la pantalla deben incluir el snapshot actualizado — un `jest --updateSnapshot` a ciegas sin revisar el diff es una violación del checklist.
+**Pantallas de funcionalidades:** Cada pantalla completada fija su snapshot en su propio archivo de test co-locado (`login`, `index` de búsqueda, `applied`, `favorites` y el contenido del sheet `JobDetail`) — agregado una vez que el ticket de la pantalla pasó verificación, según la regla de que los snapshots cubren pantallas que se entregan como completas, no pantallas en desarrollo activo. Los PRs futuros que modifiquen intencionalmente una pantalla deben incluir el snapshot actualizado, revisado como parte del diff del PR — un `jest --updateSnapshot` a ciegas sin revisar qué cambió es una violación del checklist.
 
 El checklist del PR incluye: _"Snapshots revisados, no actualizados a ciegas."_
-
-Los snapshots no se agregan a pantallas en desarrollo activo — solo a pantallas que se envían como completas.
 
 ### Qué no testeamos
 
@@ -46,7 +44,7 @@ Los snapshots no se agregan a pantallas en desarrollo activo — solo a pantalla
 **Frontend:**
 
 - `jest` + `@testing-library/react-native` — tests de componentes y hooks
-- `msw` (Mock Service Worker) — intercepta llamadas fetch en tests sin mockear módulos
+- `global.fetch` mockeado / módulos de servicio mockeados en el límite de red. `msw` se evaluó y se descartó deliberadamente para tests unitarios: las dependencias ESM-only de msw v2 fallan al transformarse bajo `jest-expo` + el `node_modules` anidado de pnpm, y mockear `fetch` es más ligero e idiomático para alcance unitario de todos modos (ver `docs/MAP.md`). Queda como opción para futuros tests de integración genuinos.
 - `@testing-library/jest-native` — matchers adicionales para React Native
 
 **Backend:**
@@ -77,24 +75,27 @@ describe('auth.store', () => {
 
 ### Ejemplo — interceptor del servicio de API
 
-```ts
-// core/services/api.test.ts
-describe('interceptor de api', () => {
-  it('inyecta JWT en requests autenticados', async () => {
-    useAuthStore.setState({ token: 'test-jwt' })
-    const handler = rest.get('*/jobs', (req, res, ctx) => {
-      expect(req.headers.get('Authorization')).toBe('Bearer test-jwt')
-      return res(ctx.json({ data: { items: [], pagination: {} } }))
-    })
-    server.use(handler)
-    await api.get('/jobs')
-  })
+El cliente es un wrapper delgado sobre `fetch`, así que sus tests mockean `global.fetch` directamente (este es el patrón real de `app/core/services/api.test.ts`):
 
-  it('limpia sesión y redirige en 401', async () => {
-    server.use(rest.get('*/jobs', (_req, res, ctx) => res(ctx.status(401))))
-    await api.get('/jobs').catch(() => {})
-    expect(useAuthStore.getState().token).toBeNull()
-  })
+```ts
+// core/services/api.test.ts (extracto)
+it('inyecta el JWT como Authorization: Bearer <token> en requests autenticados', async () => {
+  configureApi({ getToken: () => 'tok' })
+  mockResponseOnce(200, { data: { id: '1', email: 'a@b.co' } })
+
+  await get('/me', MeResponseSchema)
+
+  const headers = lastRequestInit().headers as Record<string, string>
+  expect(headers.Authorization).toBe('Bearer tok')
+})
+
+it('invoca onUnauthorized (limpieza de sesión) ante un 401', async () => {
+  const onUnauthorized = jest.fn()
+  configureApi({ onUnauthorized })
+  mockResponseOnce(401, { error: { code: 'TOKEN_EXPIRED', message: 'El token ha expirado' } })
+
+  await expect(get('/me', MeResponseSchema)).rejects.toBeInstanceOf(ApiError)
+  expect(onUnauthorized).toHaveBeenCalled()
 })
 ```
 
@@ -164,6 +165,8 @@ main (v1.2.0 en producción)
 
 ## Decisión 3 · Perfiles de build EAS, distribución y flujo de release
 
+> **Estado: política de equipo propuesta.** La protección de ramas y la aplicación de CODEOWNERS son configuraciones del repo hosteado en GitHub, y los perfiles de EAS requieren un proyecto de EAS — ninguna está activada en este repo de ejercicio de un solo autor. El workflow de CI (Decisión 4) sí está activo hoy; la capa de aprobaciones es lo que el equipo enciende el día que se suma un segundo contribuidor.
+
 Usamos Expo Application Services (EAS) con tres perfiles de build mapeados a la estrategia de branching.
 
 ### Perfiles de build
@@ -200,7 +203,7 @@ Cuando se crea una rama `release/*` desde `develop`, EAS inicia un build `previe
 
 ---
 
-## Decisión 4 · Automatización pre-merge con Husky
+## Decisión 4 · Automatización pre-merge con Husky + CI
 
 Husky ejecuta verificaciones localmente antes de que el código llegue al remoto. Dos hooks:
 
@@ -217,6 +220,12 @@ Usando `lint-staged` para que solo se analicen los archivos en staging — no to
 - `jest --passWithNoTests`
 
 Esto evita que CI sea el primer lugar donde se detectan fallos. El desarrollador sabe que su rama está limpia antes de que llegue al remoto.
+
+**CI — `.github/workflows/ci.yml`** — el mismo gate corre en GitHub Actions en cada push y PR a `main`/`develop`, como respaldo de aplicación que no depende de que cada contribuidor tenga los hooks instalados:
+
+1. `pnpm install --frozen-lockfile` — una deriva del lockfile falla el build en vez de re-resolver silenciosamente
+2. `pnpm typecheck` · `pnpm lint` · `pnpm test`
+3. `pnpm expo:check` (`expo install --check`) — valida cada dependencia gestionada por Expo contra lo que el SDK de Expo realmente fija. Este paso existe porque `tsc`/`eslint`/`jest` nunca ejercitan Metro, Babel ni el runtime nativo de Expo Go — una dependencia que se desvía de la versión fijada por el SDK pasa las tres y aun así rompe la app en el primer arranque (pasó; ver la tabla del gate de verificación en A6). `pnpm verify` corre los mismos cuatro pasos localmente.
 
 ---
 
@@ -356,12 +365,15 @@ Seguimos WCAG 2.1 AA como línea base. La accesibilidad se aplica en tres nivele
 
 ### Análisis estático — pre-commit
 
-`eslint-plugin-react-native-a11y` se ejecuta como parte de la configuración de ESLint. Detecta las violaciones más comunes antes de que el código sea commiteado:
+`eslint-plugin-react-native-a11y` se ejecuta como parte de la configuración de ESLint — `.eslintrc.js` extiende `plugin:react-native-a11y/all`, con alcance `app/**/*.tsx`. Detecta las violaciones más comunes antes de que el código sea commiteado:
 
 - `accessibilityLabel` faltante en elementos interactivos
 - `accessibilityRole` faltante en touchables
-- Touch targets menores a 44×44pt
+- Touchables con label pero sin `accessibilityHint`
+- Imágenes sin `accessibilityIgnoresInvertColors`
 - `accessibilityState` incorrecto o faltante en toggles (botones de Postular, Favorito)
+
+Encender el plugin sacó a la luz cinco violaciones reales en código ya revisado — hints faltantes en touchables con label (`Input`, `JobCard`, el botón de quitar en actividades), un backdrop de modal sin descriptores en `Select`, y el flag de invert-colors faltante en la imagen de `Avatar` — todas corregidas en el mismo cambio, que es exactamente el argumento a favor del enforcement automático sobre la disciplina manual.
 
 ### Testing — a nivel de componente y pantalla
 

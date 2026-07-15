@@ -132,3 +132,12 @@ describe('LoginScreen', () => {
     expect(screen.getByLabelText('Password').props.value).toBe('wrongpass')
   })
 })
+
+// A4 snapshot policy: this screen is declared complete (login-screen ticket
+// PASS), so its rendered output is pinned. Intentional UI changes must update
+// this snapshot in the same PR, reviewed — never blindly regenerated.
+describe('LoginScreen snapshot (A4 snapshot policy)', () => {
+  it('matches the completed-screen snapshot', () => {
+    expect(render(<LoginScreen />).toJSON()).toMatchSnapshot()
+  })
+})

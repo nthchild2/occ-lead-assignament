@@ -4,6 +4,8 @@
 
 This document covers the metrics we monitor in production, the tools we use, and the concrete optimizations applied to the job list. It also covers how the swipe prefetch is managed without impacting the initial render.
 
+> **Implementation status.** The FlashList optimizations (Decision 2) and the `InteractionManager` prefetch strategy (Decision 3) are implemented and live in the code. The monitoring and analytics stack (Decisions 1 and 4) is the **production plan, not wired in this exercise**: Sentry is not a dependency of the project, and the `@react-native-firebase/perf` / `analytics` packages are installed but never initialized — no traces or events fire today. They're documented here so the day the app ships, what to instrument and why is already decided; treat every code snippet in Decisions 1 and 4 as the intended integration, not existing code.
+
 ---
 
 ## Decision 1 · Production monitoring
@@ -13,6 +15,7 @@ This document covers the metrics we monitor in production, the tools we use, and
 Sentry captures crashes, unhandled exceptions, and network errors in both the app and the backend. It is the primary tool for detecting and diagnosing production issues.
 
 **App:**
+
 - Crash reporting with full stack trace and device context
 - Unhandled promise rejections
 - Network error tracking — failed API calls, timeouts, 4xx/5xx responses
@@ -20,6 +23,7 @@ Sentry captures crashes, unhandled exceptions, and network errors in both the ap
 - Breadcrumbs — a trail of user actions leading up to a crash, without capturing PII
 
 **Backend:**
+
 - Unhandled exceptions in Express middleware
 - Domain service errors
 - JWT verification failures (volume spikes indicate potential abuse)
@@ -32,13 +36,13 @@ Firebase Performance monitors the real-world performance of the app on user devi
 
 **What we instrument:**
 
-| Metric | What it tells us |
-|---|---|
-| App start time (cold) | Time from process launch to first interactive screen |
-| App start time (warm) | Time from background to foreground |
-| Job list first render | Time from screen mount to first visible job card |
-| API response times | P50, P90, P99 for each endpoint |
-| HTTP success/failure rates | Error rates per endpoint in production |
+| Metric                     | What it tells us                                     |
+| -------------------------- | ---------------------------------------------------- |
+| App start time (cold)      | Time from process launch to first interactive screen |
+| App start time (warm)      | Time from background to foreground                   |
+| Job list first render      | Time from screen mount to first visible job card     |
+| API response times         | P50, P90, P99 for each endpoint                      |
+| HTTP success/failure rates | Error rates per endpoint in production               |
 
 Firebase Performance's network monitoring instruments fetch calls automatically — no manual instrumentation needed for API response times. Custom traces are added for the metrics that matter most: app start and list first render.
 
@@ -70,7 +74,7 @@ We measure a representative job card at design time and set a fixed value:
 ```tsx
 <FlashList
   data={jobs}
-  estimatedItemSize={88}  // measured from a typical job card
+  estimatedItemSize={88} // measured from a typical job card
   renderItem={({ item }) => <JobCard job={item} />}
 />
 ```
@@ -86,7 +90,7 @@ const JobCard = React.memo(
   ({ job }: { job: Job }) => {
     // render
   },
-  (prev, next) => prev.job.id === next.job.id
+  (prev, next) => prev.job.id === next.job.id,
 )
 ```
 
@@ -132,7 +136,7 @@ If job cards include company logos, `expo-image` handles lazy loading and disk c
 ```tsx
 import { Image } from 'expo-image'
 
-<Image
+;<Image
   source={{ uri: job.companyLogoUrl }}
   style={styles.logo}
   contentFit="contain"
@@ -247,11 +251,11 @@ The consent flow and UI are out of scope for this exercise but the infrastructur
 
 ## Key metrics summary
 
-| Metric | Tool | Target |
-|---|---|---|
-| Crash-free sessions | Sentry | > 99.5% |
-| App cold start | Firebase Performance | < 2s |
-| Job list first render | Firebase Performance | < 500ms |
-| API P90 response time | Firebase Performance | < 300ms |
-| Job swipe P90 | Firebase Performance custom trace | < 16ms |
-| High-severity dependency vulnerabilities | Dependabot + `npm audit` | 0 |
+| Metric                                   | Tool                              | Target  |
+| ---------------------------------------- | --------------------------------- | ------- |
+| Crash-free sessions                      | Sentry                            | > 99.5% |
+| App cold start                           | Firebase Performance              | < 2s    |
+| Job list first render                    | Firebase Performance              | < 500ms |
+| API P90 response time                    | Firebase Performance              | < 300ms |
+| Job swipe P90                            | Firebase Performance custom trace | < 16ms  |
+| High-severity dependency vulnerabilities | Dependabot + `npm audit`          | 0       |

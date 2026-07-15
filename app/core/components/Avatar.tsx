@@ -22,6 +22,7 @@ export function Avatar({ uri, fallback, size = 44 }: AvatarProps) {
         style={{ width: size, height: size, borderRadius: theme.radii.full }}
         contentFit="cover"
         transition={150}
+        accessibilityIgnoresInvertColors
       />
     )
   }

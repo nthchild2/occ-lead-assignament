@@ -86,6 +86,35 @@ module.exports = {
         ],
       },
     },
+    // App — components must consume design tokens through the composed
+    // `Theme` (useTheme()), never by importing the raw `tokens.ts` directly.
+    // Only `core/theme/` itself (theme.ts, index.ts) may touch tokens.
+    {
+      files: ['app/**/*.ts', 'app/**/*.tsx'],
+      excludedFiles: ['app/core/theme/**'],
+      rules: {
+        'no-restricted-imports': [
+          'error',
+          {
+            patterns: [
+              {
+                group: ['**/theme/tokens', '**/tokens'],
+                message:
+                  'Do not import tokens.ts directly — consume the composed Theme via useTheme() (core/theme is the only place allowed to read raw tokens).',
+              },
+            ],
+          },
+        ],
+      },
+    },
+    // App — accessibility rules (A4 Decision 8): missing roles/labels on
+    // touchables, a11y state on toggles, touch-target hints. RN components
+    // only, so scoped to .tsx under app/.
+    {
+      files: ['app/**/*.tsx'],
+      plugins: ['react-native-a11y'],
+      extends: ['plugin:react-native-a11y/all'],
+    },
     // Test files — relax some rules
     {
       files: ['**/*.test.ts', '**/*.test.tsx', '**/*.spec.ts'],

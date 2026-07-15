@@ -124,12 +124,11 @@ useEffect(() => {
 }, [activeJobId])
 
 const onSheetDismiss = () => {
-  // Solo hace scroll de la lista si la pestaña de Búsqueda está activa
-  if (activeTab === 'index' && activeJobIndex !== -1) {
+  // Solo hace scroll de la lista si hay una posición conocida (índice >= 0)
+  if (activeJobIndex !== null && activeJobIndex >= 0) {
     flashListRef.current?.scrollToIndex({ index: activeJobIndex, animated: false })
   }
   clearActiveJob()
-  if (jobId) router.setParams({ jobId: undefined })
 }
 
 return (
@@ -142,7 +141,7 @@ return (
 )
 ```
 
-Las tarjetas de empleo en `index.tsx` llaman a `setActiveJob(job.id, index)`. Los taps en notificaciones establecen `jobId` como parámetro de URL, que el layout protegido lee y traduce en una llamada a `setActiveJob`.
+Las tarjetas de empleo en `index.tsx` llaman a `setActiveJob(job.id, index)`. Los taps en notificaciones y el deep link `occ://vacante/:id` desembocan en exactamente la misma llamada (con índice `-1` — ver Decisión 3), así que el layout tiene un único disparador para presentar el sheet sin importar el punto de entrada.
 
 ---
 
@@ -154,40 +153,45 @@ La especificación requiere que al tocar una notificación push se abra el sheet
 
 ### Decisión
 
-El deep link resuelve a `/(protected)/(tabs)/index?jobId=123`. El layout protegido intercepta el parámetro `jobId`, obtiene el empleo y abre el sheet sin cambiar de pestaña:
+El deep link se implementa como una ruta dinámica dedicada: `occ://vacante/:id` resuelve a `app/(protected)/vacante/[id].tsx`, que Expo Router auto-registra como destino de deep link a partir de la ruta del archivo. La ruta no renderiza UI — lee el parámetro `id`, establece el empleo activo y redirige de inmediato a la raíz de tabs; el efecto existente del layout protegido que observa `activeJobId` (Decisión 2) presenta entonces el sheet sobre la pestaña que esté activa:
 
 ```ts
-// app/(protected)/_layout.tsx
-const { jobId } = useLocalSearchParams<{ jobId?: string }>()
+// app/(protected)/vacante/[id].tsx
+export default function VacanteRoute() {
+  const { id } = useLocalSearchParams<{ id: string }>()
 
-useEffect(() => {
-  if (!jobId) return
-  jobsService.getById(jobId).then((job) => {
-    setActiveJob(job.id, -1) // el índice es desconocido al llegar desde un deep link
-  })
-}, [jobId])
+  useEffect(() => {
+    if (id) {
+      useJobsStore.getState().setActiveJob(id, -1)
+    }
+  }, [id])
+
+  return <Redirect href="/(protected)/(tabs)" />
+}
 ```
 
-`activeJobIndex` es `-1` al llegar desde un deep link — el empleo no está en la lista de `jobs.store`. El swipe entre empleos está deshabilitado en este caso. El sheet muestra solo el detalle de ese empleo.
+`activeJobIndex` es `-1` al llegar por esta vía — el empleo no está necesariamente en la lista de `jobs.store`. El swipe entre empleos está deshabilitado en este caso, y el contenido del sheet recurre a obtener el empleo por id (`jobsService.getById`) cuando no está en la lista cargada.
 
-Cuando el sheet se cierra, el parámetro `jobId` se elimina de la URL para que el sheet no se reabra en el siguiente render.
+Como la ruta redirige de inmediato, ningún parámetro de URL queda vivo después de que el sheet se abre — el riesgo de "el sheet se reabre en el siguiente render" de un enfoque basado en query params no existe aquí.
 
 ### Registro del handler de Notifee
 
-El handler de eventos de Notifee se registra en `(protected)/_layout.tsx` para que solo se dispare cuando el usuario está autenticado:
+Los taps en foreground no pasan por el router en absoluto. `(protected)/_layout.tsx` registra el handler — para que solo se dispare cuando el usuario está autenticado — y llama al store directamente:
 
 ```ts
 // app/(protected)/_layout.tsx
-useEffect(() => {
-  return notifee.onForegroundEvent(({ type, detail }) => {
-    if (type === EventType.PRESS && detail.notification?.data?.jobId) {
-      router.setParams({ jobId: detail.notification.data.jobId })
-    }
-  })
-}, [])
+function handleForegroundPress(event: NotifeeEvent): void {
+  if (event.type !== EventType.PRESS) return
+  const jobId = event.detail.notification?.data?.jobId
+  if (typeof jobId === 'string') {
+    useJobsStore.getState().setActiveJob(jobId, -1)
+  }
+}
+
+useEffect(() => notifee.onForegroundEvent(handleForegroundPress), [])
 ```
 
-Los eventos en background y estado cerrado se manejan en `app/_layout.tsx` mediante `notifee.onBackgroundEvent` y `notifee.getInitialNotification`.
+Los eventos en background y estado cerrado se manejan en `app/_layout.tsx` mediante `notifee.onBackgroundEvent` y `notifee.getInitialNotification` — ambos guardan el id del empleo en `core/lib/pendingNotification.ts` (un holder a nivel de módulo con semántica de leer-y-limpiar) en vez de navegar, y la Decisión 4 cubre cuándo se consume ese id pendiente.
 
 ---
 
@@ -199,7 +203,7 @@ Cuando la app está cerrada y el usuario toca una notificación, la app se lanza
 
 ### Decisión
 
-La secuencia de hidratación en `(protected)/_layout.tsx` ejecuta `GET /auth/me` antes de renderizar cualquier hijo. El `jobId` se retiene hasta que la hidratación completa.
+La secuencia de hidratación en `(protected)/_layout.tsx` ejecuta `GET /auth/me` antes de renderizar cualquier hijo. El id del empleo se retiene en `core/lib/pendingNotification.ts` hasta que la hidratación completa.
 
 Secuencia al tocar una notificación con app cerrada:
 
@@ -207,14 +211,15 @@ Secuencia al tocar una notificación con app cerrada:
 La app se lanza en frío
   → app/_layout.tsx se renderiza
   → notifee.getInitialNotification() lee la notificación pendiente
-  → almacena jobId en una ref (aún no navega)
+  → setPendingJobId(jobId) lo guarda (aún no navega)
   → (protected)/_layout.tsx se monta
   → GET /auth/me se ejecuta
-  → si válido: renderiza hijos, luego establece parámetro jobId → el sheet se abre
-  → si inválido: logout(), navegar al login (el jobId se descarta)
+  → si válido: la hidratación pasa a 'ready' → consumePendingJobId()
+    → setActiveJob(jobId, -1) → el sheet se abre
+  → si inválido: clearSession() → redirect al login (el id pendiente se descarta)
 ```
 
-El `jobId` no se pasa al router hasta que la hidratación completa con éxito. Esto evita que el sheet se abra antes de que la sesión esté confirmada.
+`consumePendingJobId()` es leer-y-limpiar — devuelve el valor retenido y lo resetea en la misma llamada, así que la misma notificación nunca puede reabrir el sheet dos veces — y solo corre una vez que la hidratación está en `'ready'`, lo que evita que el sheet se abra antes de que la sesión esté confirmada.
 
 ---
 
@@ -244,10 +249,10 @@ Cada pestaña monta su propio store (`applications.store`, `favorites.store`) de
 Cuando el sheet está abierto y el usuario ha hecho swipe hasta el empleo en el índice N:
 
 1. `jobs.store.activeJobIndex` se actualiza en cada swipe mediante `setActiveJob`
-2. Al cerrar el sheet, si la pestaña de Búsqueda está activa y `activeJobIndex !== -1`, `scrollToIndex` lleva el empleo activo a la vista
+2. Al cerrar el sheet, si el ref de la lista está registrado y `activeJobIndex >= 0`, `scrollToIndex` lleva el empleo activo a la vista (best-effort, envuelto para que un ref/índice obsoleto nunca pueda romper el cierre)
 3. `clearActiveJob()` resetea el store
 
-Si `activeJobIndex` es `-1` (entrada por deep link), se omite `scrollToIndex`.
+Si `activeJobIndex` es `-1` (entrada por deep link / notificación) o `null`, se omite `scrollToIndex`.
 
 Si el usuario hizo swipe hasta empleos cargados desde una página posterior, `activeJobIndex` refleja la posición en el array completo acumulado de `jobs.store.jobs` — no la posición dentro de una sola página. FlashList recibe el array completo, por lo que el índice es válido.
 
@@ -255,4 +260,4 @@ Si el usuario hizo swipe hasta empleos cargados desde una página posterior, `ac
 
 ## Nota de implementación · Traspaso de jobId en estado cerrado
 
-La secuencia de estado cerrado almacena el `jobId` en una ref en `app/_layout.tsx` antes de que la hidratación complete. El layout protegido lee este valor después de que la hidratación completa con éxito. El traspaso entre ellos debe ser deliberado — un contexto de React o una variable a nivel de módulo es la opción más limpia. Un slice de Zustand es posible pero agrega riesgo de persistencia: este valor nunca debe sobrevivir un reinicio de la app por sí solo. Esto requiere atención cuidadosa durante la implementación para evitar una condición de carrera donde el sheet se abre antes de que la sesión esté confirmada.
+El traspaso de estado cerrado está implementado como un holder a nivel de módulo, `core/lib/pendingNotification.ts`: `app/_layout.tsx` llama a `setPendingJobId()` antes de que la hidratación complete, y `(protected)/_layout.tsx` llama a `consumePendingJobId()` (semántica de leer-y-limpiar) solo después de que su estado de hidratación llega a `'ready'`. Se evitó deliberadamente un slice de Zustand — este valor nunca debe sobrevivir un reinicio de la app por sí solo, y mantenerlo fuera de cualquier store elimina el riesgo de que algún día termine dentro de una configuración `persist` futura. El contrato de leer-y-limpiar más la compuerta de hidratación es lo que cierra la condición de carrera donde el sheet podría abrirse antes de que la sesión esté confirmada.

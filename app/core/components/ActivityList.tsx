@@ -2,15 +2,18 @@ import type { Job } from '@occ/shared'
 import React from 'react'
 import { FlatList, View } from 'react-native'
 
-import {
-  Button,
-  EmptyState,
-  ErrorState,
-  JobCard,
-  JobCardSkeleton,
-} from '../../../../core/components'
-import { useTheme } from '../../../../core/hooks/useTheme'
-import type { Theme } from '../../../../core/theme'
+import { Button } from './Button'
+import { EmptyState } from './EmptyState'
+import { ErrorState } from './ErrorState'
+import { JobCard } from './JobCard'
+import { JobCardSkeleton } from './Skeleton'
+import { useTheme } from '../hooks/useTheme'
+import type { Theme } from '../theme'
+
+// Lives in core/components/ (not route-adjacent) per docs/MAP.md: it's a
+// reusable, navigation-agnostic list shared by two screens — and a non-route
+// file inside app/app/ makes Expo Router warn about a missing default export
+// on every start, since the router scans that whole tree as routes.
 
 /** Normalized row shape both `applied.tsx` and `favorites.tsx` adapt into. */
 export interface ActivityRow {
@@ -60,6 +63,7 @@ function ActivityRowItem({
         variant="danger"
         size="sm"
         accessibilityLabel={`${removeLabel} ${row.job.title}`}
+        accessibilityHint="Se elimina de esta lista de inmediato"
         onPress={() => onRemove(row.id)}
       />
     </View>
